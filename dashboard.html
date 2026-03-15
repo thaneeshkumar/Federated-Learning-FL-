@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0b0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>MedEdge — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0b0f1a; --surface: #111827; --border: rgba(99,178,255,0.11);
+      --blue: #3B8BD4; --blue-lt: #85B7EB; --blue-dk: #185FA5;
+      --teal: #1D9E75; --teal-lt: #5DCAA5;
+      --amber: #EF9F27; --amber-lt: #FAC775;
+      --purple: #7F77DD; --purple-lt: #AFA9EC;
+      --red: #E24B4A; --red-lt: #F09595;
+      --text: #e8ecf4; --text2: #9aa3b5; --text3: #4e5a70;
+      --mono: 'IBM Plex Mono', monospace; --sans: 'DM Sans', sans-serif;
+      --r: 10px;
+    }
+    html { -webkit-text-size-adjust: 100%; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100dvh; overflow-x: hidden; }
+
+    /* ── Top bar ─────────────────────────────────────────── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; border-bottom: 0.5px solid var(--border);
+      background: var(--surface); position: sticky; top: 0; z-index: 100;
+    }
+    .tb-left  { display: flex; align-items: center; gap: 10px; }
+    .tb-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pulse    { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); animation: pd 2s ease-in-out infinite; }
+    @keyframes pd { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+    .brand { font-size: 13px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+    .brand-sub { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+    .doc-chip {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(59,139,212,.1); border: 0.5px solid rgba(59,139,212,.3);
+      border-radius: 20px; padding: 4px 11px 4px 5px;
+    }
+    .doc-av { width: 24px; height: 24px; border-radius: 50%; background: rgba(59,139,212,.2); color: var(--blue-lt); font-size: 9px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    .doc-nm { font-size: 11px; font-weight: 500; }
+    .doc-rl { font-size: 9px; color: var(--text2); font-family: var(--mono); }
+    .badge  { font-size: 9px; font-family: var(--mono); font-weight: 500; padding: 3px 8px; border-radius: 4px; letter-spacing: .04em; white-space: nowrap; }
+    .b-fl   { background: rgba(127,119,221,.12); color: var(--purple-lt); border: .5px solid rgba(127,119,221,.25); }
+    .b-edge { background: rgba(29,158,117,.1);   color: var(--teal-lt);   border: .5px solid rgba(29,158,117,.2); }
+    .b-cl   { background: rgba(59,139,212,.1);   color: var(--blue-lt);   border: .5px solid rgba(59,139,212,.2); }
+    .live   { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--teal); font-family: var(--mono); }
+    .ld     { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); animation: pd 1s ease-in-out infinite; }
+    .btn-logout { font-size: 10px; padding: 4px 10px; background: rgba(226,75,74,.08); color: var(--red-lt); border: .5px solid rgba(226,75,74,.25); border-radius: 5px; cursor: pointer; font-family: var(--sans); transition: background .15s; }
+    .btn-logout:hover { background: rgba(226,75,74,.15); }
+
+    /* ── Grid layout ─────────────────────────────────────── */
+    .dash { padding: 12px 14px; display: grid; gap: 10px; }
+    .layout { display: grid; grid-template-columns: 190px 1fr 185px; gap: 10px; }
+    .panel { background: var(--surface); border: .5px solid var(--border); border-radius: var(--r); padding: 12px 13px; }
+    .plbl  { font-size: 9px; font-family: var(--mono); color: var(--text2); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 9px; display: flex; align-items: center; justify-content: space-between; }
+    .pdot  { width: 5px; height: 5px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+    /* ── Patient list ────────────────────────────────────── */
+    .pt-list { display: flex; flex-direction: column; gap: 5px; }
+    .pt-item { display: flex; align-items: center; gap: 7px; padding: 7px 8px; border-radius: 7px; cursor: pointer; transition: background .15s; border: .5px solid transparent; }
+    .pt-item:hover  { background: rgba(255,255,255,.03); }
+    .pt-item.active { background: rgba(59,139,212,.1); border-color: rgba(59,139,212,.3); }
+    .pt-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+    .pt-nm { font-size: 11px; font-weight: 500; }
+    .pt-mt { font-size: 9px; color: var(--text2); font-family: var(--mono); }
+    .sdot  { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .sn { background: var(--teal); }
+    .sw { background: var(--amber); animation: pd 1.2s ease-in-out infinite; }
+    .sc { background: var(--red);   animation: pd .7s  ease-in-out infinite; }
+    .sess-info { font-size: 9px; color: var(--text3); font-family: var(--mono); margin-top: 8px; padding-top: 7px; border-top: .5px solid var(--border); line-height: 1.5; }
+
+    /* ── Main col ────────────────────────────────────────── */
+    .main-col { display: flex; flex-direction: column; gap: 10px; }
+    .pt-hdr { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: .5px solid var(--border); border-radius: var(--r); padding: 9px 13px; }
+    .ph-left { display: flex; align-items: center; gap: 10px; }
+    .ph-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .ph-nm { font-size: 13px; font-weight: 500; }
+    .ph-mt { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+    .vtag  { display: inline-block; font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px; font-weight: 500; }
+
+    /* ── Vitals row ──────────────────────────────────────── */
+    .vrow { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+    .vc { background: rgba(255,255,255,.025); border: .5px solid var(--border); border-radius: 8px; padding: 11px 12px; position: relative; overflow: hidden; }
+    .vc::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:8px 8px 0 0; }
+    .vc-hr::before   { background: var(--red); }
+    .vc-tmp::before  { background: var(--amber); }
+    .vc-spo::before  { background: var(--blue); }
+    .vlbl { font-size: 9px; font-family: var(--mono); color: var(--text2); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .vdot { width: 7px; height: 7px; border-radius: 50%; }
+    .vval { font-size: 26px; font-family: var(--mono); font-weight: 500; line-height: 1; }
+    .vunt { font-size: 11px; color: var(--text2); margin-left: 2px; }
+    .vrng { font-size: 9px; color: var(--text2); font-family: var(--mono); margin-top: 3px; }
+
+    /* ── Waveforms ───────────────────────────────────────── */
+    canvas.wv { width:100%; height:64px; display:block; border-radius:4px; background:rgba(255,255,255,.015); border:.5px solid var(--border); }
+    canvas.sv { width:100%; height:48px; display:block; border-radius:4px; background:rgba(255,255,255,.015); border:.5px solid var(--border); }
+
+    /* ── Right col ───────────────────────────────────────── */
+    .right-col { display: flex; flex-direction: column; gap: 10px; }
+    .arch-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:5px; font-size:10px; margin-bottom:4px; background:rgba(255,255,255,.02); border:.5px solid var(--border); }
+    .arch-nm  { flex:1; font-weight:500; font-size:10px; }
+    .arch-dt  { font-size:9px; color:var(--text2); font-family:var(--mono); }
+    .fl-prog  { margin-top:8px; padding-top:7px; border-top:.5px solid var(--border); }
+    .fl-lbl   { display:flex; justify-content:space-between; font-size:9px; font-family:var(--mono); color:var(--text2); margin-bottom:4px; }
+    .pb-wrap  { height:3px; background:rgba(255,255,255,.07); border-radius:2px; overflow:hidden; }
+    .pb-fill  { height:100%; border-radius:2px; background:var(--purple); transition:width 1s ease; }
+    .thr-row  { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:.5px solid rgba(99,178,255,.07); font-size:10px; }
+    .thr-row:last-child { border-bottom:none; }
+    .thr-key  { color:var(--text2); font-family:var(--mono); font-size:9px; }
+    .thr-inp  { background:rgba(255,255,255,.05); border:.5px solid var(--border); border-radius:4px; padding:2px 6px; font-size:10px; font-family:var(--mono); color:var(--text); width:52px; text-align:right; outline:none; transition:border-color .15s; }
+    .thr-inp:focus { border-color:rgba(59,139,212,.5); }
+
+    /* ── Bottom row ──────────────────────────────────────── */
+    .bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .al  { display:flex; flex-direction:column; gap:4px; max-height:115px; overflow-y:auto; }
+    .ai  { display:flex; align-items:flex-start; gap:7px; padding:6px 9px; border-radius:5px; font-size:10px; animation:ain .35s ease; }
+    @keyframes ain { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+    .ai.ac { background:rgba(226,75,74,.1); border:.5px solid rgba(226,75,74,.2); }
+    .ai.aw { background:rgba(239,159,39,.1); border:.5px solid rgba(239,159,39,.2); }
+    .ai.af { background:rgba(59,139,212,.07); border:.5px solid rgba(59,139,212,.18); }
+    .ai-b  { flex:1; }
+    .ai-t  { font-weight:500; margin-bottom:1px; }
+    .ai-d  { color:var(--text2); font-family:var(--mono); font-size:9px; }
+    .ai-tm { font-size:9px; color:var(--text2); font-family:var(--mono); flex-shrink:0; }
+    .store-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+    .sc { background:rgba(255,255,255,.02); border:.5px solid var(--border); border-radius:6px; padding:6px 8px; }
+    .sc-l { font-size:8px; font-family:var(--mono); color:var(--text2); letter-spacing:.06em; text-transform:uppercase; margin-bottom:2px; }
+    .sc-v { font-size:11px; font-family:var(--mono); font-weight:500; color:var(--blue-lt); }
+    .sc-s { font-size:8px; color:var(--text2); font-family:var(--mono); margin-top:1px; }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn { padding:5px 11px; border-radius:5px; font-size:10px; font-family:var(--sans); font-weight:500; cursor:pointer; border:.5px solid; transition:all .15s; }
+    .btn-p { background:rgba(59,139,212,.12); color:var(--blue-lt); border-color:rgba(59,139,212,.3); }
+    .btn-p:hover { background:rgba(59,139,212,.22); }
+    .btn-d { background:rgba(226,75,74,.1); color:var(--red-lt); border-color:rgba(226,75,74,.28); }
+    .btn-d:hover { background:rgba(226,75,74,.2); }
+    .spin { display:inline-block; animation:sp 2s linear infinite; }
+    @keyframes sp { to{transform:rotate(360deg)} }
+
+    /* ── Toast notifications ─────────────────────────────── */
+    .toast-wrap { position:fixed; top:60px; right:16px; z-index:999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+    .toast {
+      background:#1a0808; border:1px solid rgba(226,75,74,.5);
+      border-radius:8px; padding:10px 13px;
+      display:flex; align-items:flex-start; gap:9px;
+      min-width:240px; max-width:300px;
+      animation:toast-in .3s ease; pointer-events:all;
+    }
+    @keyframes toast-in { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+    .toast-title { font-size:12px; font-weight:500; color:var(--red-lt); margin-bottom:2px; }
+    .toast-msg   { font-size:10px; color:var(--text2); font-family:var(--mono); }
+    .toast-close { cursor:pointer; opacity:.5; font-size:13px; margin-left:auto; flex-shrink:0; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width:900px) {
+      .layout { grid-template-columns:1fr 1fr; }
+      .right-col { grid-column:1/3; display:grid; grid-template-columns:1fr 1fr; }
+      .bottom-row { grid-column:1/3; }
+    }
+    @media (max-width:640px) {
+      .layout { grid-template-columns:1fr; }
+      .right-col { grid-column:1; grid-template-columns:1fr; }
+      .vrow { grid-template-columns:1fr; }
+      .store-grid { grid-template-columns:repeat(2,1fr); }
+      .bottom-row { grid-template-columns:1fr; }
+      .tb-right .badge { display:none; }
+    }
+    ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
+  </style>
+</head>
+<body>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="pulse"></div>
+      <div>
+        <div class="brand">MedEdge</div>
+        <div class="brand-sub" id="wardLabel">Dashboard</div>
+      </div>
+    </div>
+    <div class="doc-chip" id="docChip">
+      <div class="doc-av" id="docAv">AS</div>
+      <div>
+        <div class="doc-nm" id="docName">Dr. Arjun Sharma</div>
+        <div class="doc-rl" id="docRole">Doctor · ICU-3</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <span class="badge b-fl">FL v2.4</span>
+      <span class="badge b-edge">Edge</span>
+      <span class="badge b-cl">Cloud</span>
+      <div class="live"><div class="ld"></div><span id="clock">--:--:--</span></div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="layout">
+
+      <!-- Patient list -->
+      <div class="panel">
+        <div class="plbl"><span><span class="pdot" style="background:var(--blue);"></span>Patients</span><span>4 active</span></div>
+        <div class="pt-list" id="ptList"></div>
+        <div class="sess-info">Session: <span id="sessId">DR001</span><br>Dur: <span id="sessDur">00:00</span> · <span id="sessShift">Morning</span></div>
+      </div>
+
+      <!-- Main vitals -->
+      <div class="main-col">
+        <div class="pt-hdr">
+          <div class="ph-left">
+            <div class="ph-av" id="phAv"></div>
+            <div><div class="ph-nm" id="phNm">—</div><div class="ph-mt" id="phMt">—</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="vtag" id="phTag"></span>
+            <button class="btn btn-p" onclick="simAlert()">Simulate Alert</button>
+          </div>
+        </div>
+
+        <div class="vrow">
+          <div class="vc vc-hr">
+            <div class="vlbl"><span class="vdot" style="background:var(--red);"></span>Heart Rate</div>
+            <div><span class="vval" id="vHR" style="color:var(--red);">--</span><span class="vunt">bpm</span></div>
+            <div class="vrng">Normal: 60–100 bpm</div>
+            <span class="vtag" id="tHR" style="margin-top:5px;"></span>
+          </div>
+          <div class="vc vc-tmp">
+            <div class="vlbl"><span class="vdot" style="background:var(--amber);"></span>Temperature</div>
+            <div><span class="vval" id="vTMP" style="color:var(--amber);">--</span><span class="vunt">°C</span></div>
+            <div class="vrng">Normal: 36.1–37.2 °C</div>
+            <span class="vtag" id="tTMP" style="margin-top:5px;"></span>
+          </div>
+          <div class="vc vc-spo">
+            <div class="vlbl"><span class="vdot" style="background:var(--blue);"></span>SpO₂</div>
+            <div><span class="vval" id="vSPO" style="color:var(--blue);">--</span><span class="vunt">%</span></div>
+            <div class="vrng">Normal: 95–100 %</div>
+            <span class="vtag" id="tSPO" style="margin-top:5px;"></span>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:12px 13px;">
+          <div class="plbl" style="margin-bottom:5px;"><span><span class="pdot" style="background:var(--red);"></span>ECG Waveform</span><span style="font-size:9px;color:var(--teal);">EDGE PROCESSED</span></div>
+          <canvas class="wv" id="ecgC" height="64"></canvas>
+          <div class="plbl" style="margin-top:8px;margin-bottom:4px;"><span><span class="pdot" style="background:var(--blue);"></span>SpO₂ Trend</span><span style="font-size:9px;color:var(--blue-lt);">FL INFERRED</span></div>
+          <canvas class="sv" id="spo2C" height="48"></canvas>
+        </div>
+      </div>
+
+      <!-- Right col -->
+      <div class="right-col">
+        <div class="panel">
+          <div class="plbl"><span><span class="pdot" style="background:var(--purple);"></span>FL Architecture</span></div>
+          <div class="arch-row">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="2" stroke="#5DCAA5" stroke-width="1.1"/><path d="M5 12v2M11 12v2M3 14h10" stroke="#5DCAA5" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <div style="flex:1;"><div class="arch-nm">Edge Node</div><div class="arch-dt">Local inference</div></div>
+            <div class="ld" style="background:var(--teal-lt);"></div>
+          </div>
+          <div style="display:flex;justify-content:center;padding:2px 0;">
+            <svg width="10" height="12" viewBox="0 0 10 14"><path d="M5 0v10M1 7l4 5 4-5" stroke="#AFA9EC" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="arch-row">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="6" width="12" height="8" rx="2" stroke="#AFA9EC" stroke-width="1.1"/><path d="M5 6V4.5a3 3 0 016 0V6" stroke="#AFA9EC" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <div style="flex:1;"><div class="arch-nm">FL Aggregator</div><div class="arch-dt">FedAvg · DP</div></div>
+            <div class="ld" style="background:var(--purple-lt);"></div>
+          </div>
+          <div style="display:flex;justify-content:center;padding:2px 0;">
+            <svg width="10" height="12" viewBox="0 0 10 14"><path d="M5 0v10M1 7l4 5 4-5" stroke="#85B7EB" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="arch-row">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 10c-1.1-.4-2-1.4-2-2.5 0-1.5 1.3-2.5 2.8-2.5h.3C4.5 3.8 5.9 3 7.5 3c2 0 3.5 1.5 3.5 3.5h.5C12.9 6.5 14 7.6 14 9s-1.1 2.5-2.5 2.5H3z" stroke="#85B7EB" stroke-width="1.1" stroke-linejoin="round"/></svg>
+            <div style="flex:1;"><div class="arch-nm">Cloud Store</div><div class="arch-dt">Central repo</div></div>
+            <div class="ld" style="background:var(--blue-lt);"></div>
+          </div>
+          <div class="fl-prog">
+            <div class="fl-lbl"><span>Round <span id="flR">12</span></span><span id="flP">74%</span></div>
+            <div class="pb-wrap"><div class="pb-fill" id="flBar" style="width:74%;"></div></div>
+            <div style="font-size:8px;color:var(--text3);font-family:var(--mono);margin-top:3px;">Differential privacy · Secure aggregation</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="plbl"><span><span class="pdot" style="background:var(--amber);"></span>Alert Thresholds</span></div>
+          <div class="thr-row"><div><div style="font-size:10px;font-weight:500;">HR max</div><div class="thr-key">bpm</div></div><input class="thr-inp" type="number" id="tHmax" value="100" onchange="updateThr()"></div>
+          <div class="thr-row"><div><div style="font-size:10px;font-weight:500;">HR min</div><div class="thr-key">bpm</div></div><input class="thr-inp" type="number" id="tHmin" value="50"  onchange="updateThr()"></div>
+          <div class="thr-row"><div><div style="font-size:10px;font-weight:500;">Temp max</div><div class="thr-key">°C</div></div><input class="thr-inp" type="number" id="tTmax" value="38.0" step="0.1" onchange="updateThr()"></div>
+          <div class="thr-row"><div><div style="font-size:10px;font-weight:500;">SpO₂ min</div><div class="thr-key">%</div></div><input class="thr-inp" type="number" id="tSmin" value="94"  onchange="updateThr()"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-row">
+      <div class="panel">
+        <div class="plbl">
+          <span><span class="pdot" style="background:var(--red);"></span>Alert Log · Trigger Module</span>
+          <button class="btn btn-d" style="font-size:9px;padding:2px 7px;" onclick="clearAlerts()">Clear</button>
+        </div>
+        <div class="al" id="alertList"></div>
+      </div>
+      <div class="panel">
+        <div class="plbl">
+          <span><span class="pdot" style="background:var(--teal);"></span>Centralized Data Store</span>
+          <span style="font-size:9px;color:var(--teal);font-family:var(--mono);"><span class="spin">↻</span> SYNCING</span>
+        </div>
+        <div class="store-grid" id="storeGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Read URL params ──────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const loginRole = params.get('role') || 'doctor';
+    const loginName = params.get('name') || 'Dr. Arjun Sharma';
+
+    function ini(n){ return n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+
+    // Set up header from login
+    document.getElementById('docAv').textContent  = ini(loginName);
+    document.getElementById('docName').textContent = loginName;
+    document.getElementById('docRole').textContent = loginRole.charAt(0).toUpperCase()+loginRole.slice(1)+' · ICU-3';
+    document.getElementById('wardLabel').textContent = loginRole.charAt(0).toUpperCase()+loginRole.slice(1)+' Dashboard · ICU-3';
+    document.getElementById('sessId').textContent  = loginRole==='doctor'?'DR001':loginRole==='nurse'?'NR101':loginRole==='admin'?'AD001':'P001';
+
+    // ── Data ─────────────────────────────────────────────────────
+    const PTS=[
+      {id:'P001',name:'Arjun Sharma', age:54,ward:'ICU-3',    c:'#3B8BD4',bg:'rgba(59,139,212,.15)',bhr:88, bt:37.1,bs:97},
+      {id:'P002',name:'Priya Nair',   age:42,ward:'Cardiac-1',c:'#1D9E75',bg:'rgba(29,158,117,.15)',bhr:72, bt:36.8,bs:98},
+      {id:'P003',name:'Vikram Das',   age:67,ward:'ICU-1',    c:'#EF9F27',bg:'rgba(239,159,39,.15)',bhr:95, bt:38.1,bs:93},
+      {id:'P004',name:'Meena Rao',    age:38,ward:'Gen-4',    c:'#7F77DD',bg:'rgba(127,119,221,.15)',bhr:65,bt:36.6,bs:99},
+    ];
+    let ap=0, thr={hmax:100,hmin:50,tmax:38.0,smin:94};
+    let vitals=PTS.map(p=>({hr:p.bhr,t:p.bt,s:p.bs}));
+    let ecgD=new Array(120).fill(0), spo2D=new Array(60).fill(97), ecgT=0;
+    let flP=74, flR=12, tick=0, cooldown={};
+    const sessStart=Date.now();
+
+    function status(v){
+      if(v.hr>thr.hmax+15||v.hr<thr.hmin-10||v.s<thr.smin-3||v.t>thr.tmax+0.8) return{l:'CRITICAL',dc:'sc',tb:'rgba(226,75,74,.12)',tc:'#F09595'};
+      if(v.hr>thr.hmax||v.hr<thr.hmin||v.s<thr.smin||v.t>thr.tmax)              return{l:'WARNING', dc:'sw',tb:'rgba(239,159,39,.12)',tc:'#FAC775'};
+      return{l:'NORMAL',dc:'sn',tb:'rgba(29,158,117,.1)',tc:'#5DCAA5'};
+    }
+
+    function renderList(){
+      const el=document.getElementById('ptList'); el.innerHTML='';
+      PTS.forEach((p,i)=>{
+        const st=status(vitals[i]);
+        const d=document.createElement('div');
+        d.className='pt-item'+(i===ap?' active':'');
+        d.onclick=()=>{ ap=i; renderList(); renderHeader(); };
+        d.innerHTML=`<div class="pt-av" style="background:${p.bg};color:${p.c};">${ini(p.name)}</div>
+          <div style="flex:1;min-width:0;"><div class="pt-nm">${p.name.split(' ')[0]}</div><div class="pt-mt">${p.id}·${p.ward}</div></div>
+          <div class="sdot ${st.dc}"></div>`;
+        el.appendChild(d);
+      });
+    }
+
+    function renderHeader(){
+      const p=PTS[ap],v=vitals[ap],st=status(v);
+      const av=document.getElementById('phAv');
+      av.style.background=p.bg; av.style.color=p.c; av.textContent=ini(p.name);
+      document.getElementById('phNm').textContent=p.name;
+      document.getElementById('phMt').textContent=`${p.id} · Age ${p.age} · ${p.ward}`;
+      const t=document.getElementById('phTag');
+      t.textContent=st.l; t.style.background=st.tb; t.style.color=st.tc;
+    }
+
+    function renderVitals(){
+      const v=vitals[ap];
+      document.getElementById('vHR').textContent=Math.round(v.hr);
+      document.getElementById('vTMP').textContent=v.t.toFixed(1);
+      document.getElementById('vSPO').textContent=Math.round(v.s);
+      function tag(id,ok){ const el=document.getElementById(id); el.textContent=ok?'Normal':'Abnormal'; el.style.background=ok?'rgba(29,158,117,.1)':'rgba(226,75,74,.1)'; el.style.color=ok?'#5DCAA5':'#F09595'; }
+      tag('tHR', v.hr<=thr.hmax&&v.hr>=thr.hmin);
+      tag('tTMP',v.t<=thr.tmax);
+      tag('tSPO',v.s>=thr.smin);
+    }
+
+    function addAlert(type,title,desc){
+      const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      const list=document.getElementById('alertList');
+      const d=document.createElement('div');
+      d.className='ai a'+type[0];
+      d.innerHTML=`<div class="ai-b"><div class="ai-t">${title}</div><div class="ai-d">${desc}</div></div><span class="ai-tm">${now}</span>`;
+      list.prepend(d);
+      while(list.children.length>14) list.removeChild(list.lastChild);
+    }
+
+    function showToast(title,msg){
+      const wrap=document.getElementById('toastWrap');
+      const t=document.createElement('div'); t.className='toast';
+      t.innerHTML=`<div style="flex:1;"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><span class="toast-close" onclick="this.parentElement.remove()">✕</span>`;
+      wrap.appendChild(t);
+      setTimeout(()=>{ if(t.parentElement) t.remove(); },5000);
+    }
+
+    function clearAlerts(){ document.getElementById('alertList').innerHTML=''; }
+
+    function checkAlerts(){
+      const v=vitals[ap],p=PTS[ap];
+      const checks=[
+        {k:'hh',c:v.hr>thr.hmax, tp:'critical',t:`Tachycardia — ${p.name.split(' ')[0]}`,d:`HR ${Math.round(v.hr)} bpm > ${thr.hmax} bpm`},
+        {k:'hl',c:v.hr<thr.hmin, tp:'critical',t:`Bradycardia — ${p.name.split(' ')[0]}`,d:`HR ${Math.round(v.hr)} bpm < ${thr.hmin} bpm`},
+        {k:'tm',c:v.t>thr.tmax,  tp:'warning', t:`Hyperthermia — ${p.name.split(' ')[0]}`,d:`Temp ${v.t.toFixed(1)} °C > ${thr.tmax} °C`},
+        {k:'so',c:v.s<thr.smin,  tp:'critical',t:`Hypoxia — ${p.name.split(' ')[0]}`,d:`SpO₂ ${Math.round(v.s)}% < ${thr.smin}%`},
+      ];
+      checks.forEach(c=>{
+        if(c.c&&(Date.now()-(cooldown[c.k]||0))>9000){
+          addAlert(c.tp,c.t,c.d);
+          if(c.tp==='critical') showToast(c.t,c.d);
+          cooldown[c.k]=Date.now();
+        }
+        if(!c.c) cooldown[c.k]=0;
+      });
+    }
+
+    function simAlert(){ vitals[ap].hr=thr.hmax+18+Math.random()*8; vitals[ap].s=Math.min(vitals[ap].s,thr.smin-4); renderVitals(); checkAlerts(); renderList(); renderHeader(); }
+    function updateThr(){ thr.hmax=+document.getElementById('tHmax').value; thr.hmin=+document.getElementById('tHmin').value; thr.tmax=+document.getElementById('tTmax').value; thr.smin=+document.getElementById('tSmin').value; }
+
+    function updateStore(){
+      const v=vitals[ap],p=PTS[ap];
+      const now=new Date().toISOString().replace('T',' ').substring(0,19);
+      const entries=[{k:'patient_id',v:p.id,s:'edge'},{k:'hr_bpm',v:Math.round(v.hr).toString(),s:'sensor'},{k:'temp_c',v:v.t.toFixed(2),s:'sensor'},{k:'spo2_%',v:Math.round(v.s).toString(),s:'sensor'},{k:'fl_model',v:'v2.4-r'+flR,s:'cloud_fl'},{k:'timestamp',v:now,s:'edge_clk'}];
+      document.getElementById('storeGrid').innerHTML=entries.map(e=>`<div class="sc"><div class="sc-l">${e.k}</div><div class="sc-v">${e.v}</div><div class="sc-s">${e.s}</div></div>`).join('');
+    }
+
+    function updateFL(){ flP+=(Math.random()*2.5-.3); if(flP>=100){flP=0;flR++;} flP=Math.max(0,Math.min(99,flP)); document.getElementById('flBar').style.width=Math.round(flP)+'%'; document.getElementById('flP').textContent=Math.round(flP)+'%'; document.getElementById('flR').textContent=flR; }
+
+    function ecgWave(t){ const p=60,pos=((t%p)+p)%p; if(pos<2)return pos*.3; if(pos<3)return .6-(pos-2)*.4; if(pos<4)return .2+(pos-3)*.1; if(pos<4.5)return .3+(pos-4)*1.0; if(pos<5)return .8-(pos-4.5)*3.0; if(pos<5.5)return-.7+(pos-5)*3.2; if(pos<6)return .9-(pos-5.5)*2.2; if(pos<8)return .4-(pos-6)*.15; if(pos<9)return(pos-8)*.3; if(pos<11)return .3-(pos-9)*.15; return 0; }
+
+    function drawECG(){ const c=document.getElementById('ecgC'); if(!c)return; const ctx=c.getContext('2d'),W=c.offsetWidth||400,H=64; c.width=W; c.height=H; ctx.clearRect(0,0,W,H); ctx.strokeStyle='rgba(255,255,255,.03)'; ctx.lineWidth=.5; for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();} for(let y=0;y<H;y+=13){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();} const spd=vitals[ap].hr/60; ecgD.shift(); ecgT+=spd*.8; ecgD.push(ecgWave(ecgT)); ctx.beginPath(); ctx.strokeStyle='#E24B4A'; ctx.lineWidth=1.4; for(let i=0;i<ecgD.length;i++){const x=(i/ecgD.length)*W,y=H/2-ecgD[i]*(H*.37); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
+
+    function drawSpo2(){ const c=document.getElementById('spo2C'); if(!c)return; const ctx=c.getContext('2d'),W=c.offsetWidth||400,H=48; c.width=W; c.height=H; ctx.clearRect(0,0,W,H); spo2D.shift(); spo2D.push(vitals[ap].s); const mn=85,mx=100; ctx.beginPath(); ctx.fillStyle='rgba(59,139,212,.08)'; for(let i=0;i<spo2D.length;i++){const x=(i/spo2D.length)*W,y=H-((spo2D[i]-mn)/(mx-mn))*(H-8); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill(); ctx.beginPath();ctx.strokeStyle='#3B8BD4';ctx.lineWidth=1.3; for(let i=0;i<spo2D.length;i++){const x=(i/spo2D.length)*W,y=H-((spo2D[i]-mn)/(mx-mn))*(H-8); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
+
+    function updateClock(){ document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}); const dur=Math.floor((Date.now()-sessStart)/1000); document.getElementById('sessDur').textContent=String(Math.floor(dur/60)).padStart(2,'0')+':'+String(dur%60).padStart(2,'0'); }
+
+    function updateVitals(){ PTS.forEach((p,i)=>{ const n=()=>(Math.random()-.5)*2; vitals[i].hr=Math.max(30,Math.min(180,vitals[i].hr+n())); vitals[i].t=Math.max(35,Math.min(40,vitals[i].t+(Math.random()-.5)*.07)); vitals[i].s=Math.max(85,Math.min(100,vitals[i].s+(Math.random()-.5)*.4)); vitals[i].hr+=(p.bhr-vitals[i].hr)*.05; vitals[i].t+=(p.bt-vitals[i].t)*.03; vitals[i].s+=(p.bs-vitals[i].s)*.04; }); }
+
+    function logout(){ window.location.href='index.html'; }
+
+    function loop(){ tick++; updateClock(); updateVitals(); renderVitals(); renderList(); renderHeader(); drawECG(); if(tick%3===0)drawSpo2(); if(tick%5===0)updateStore(); if(tick%8===0)updateFL(); if(tick%6===0)checkAlerts(); }
+
+    // Init
+    addAlert('info','Session started — '+loginName, loginRole+' access · FL model v2.4 loaded · All systems online');
+    renderList(); renderHeader(); updateStore(); loop();
+    setInterval(loop, 400);
+  </script>
+</body>
+</html>

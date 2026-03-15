@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0b0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>MedEdge — Secure Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0f1a;
+      --surface:  #111827;
+      --surface2: #161e2e;
+      --border:   rgba(99,178,255,0.11);
+      --border2:  rgba(99,178,255,0.22);
+      --blue:     #3B8BD4;
+      --blue-lt:  #85B7EB;
+      --blue-dk:  #185FA5;
+      --teal:     #1D9E75;
+      --teal-lt:  #5DCAA5;
+      --amber:    #EF9F27;
+      --amber-lt: #FAC775;
+      --purple:   #7F77DD;
+      --purple-lt:#AFA9EC;
+      --red:      #E24B4A;
+      --red-lt:   #F09595;
+      --text:     #e8ecf4;
+      --text2:    #9aa3b5;
+      --text3:    #4e5a70;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'DM Sans', sans-serif;
+      --r:        12px;
+      --r-sm:     8px;
+    }
+
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated grid background ───────────────────────────────── */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(59,139,212,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,139,212,0.035) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridShift 20s linear infinite;
+    }
+    @keyframes gridShift {
+      0%   { background-position: 0 0, 0 0; }
+      100% { background-position: 40px 40px, 40px 40px; }
+    }
+
+    /* Radial accent blobs */
+    .bg-blob {
+      position: fixed; z-index: 0; pointer-events: none; border-radius: 50%;
+      filter: blur(80px); opacity: 0.07;
+    }
+    .blob-1 { width: 500px; height: 500px; background: #3B8BD4; top: -100px; left: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: #1D9E75; bottom: -80px; right: -80px; }
+    .blob-3 { width: 300px; height: 300px; background: #7F77DD; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      grid-template-rows: 1fr;
+      min-height: 100dvh;
+    }
+
+    /* ── Left panel ─────────────────────────────────────────────── */
+    .left-panel {
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(32px, 5vw, 60px) clamp(32px, 5vw, 60px);
+      border-right: 0.5px solid var(--border);
+      animation: fadeUp 0.7s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand-lockup { display: flex; align-items: center; gap: 14px; }
+
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: rgba(59,139,212,0.12);
+      border: 0.5px solid rgba(59,139,212,0.3);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+
+    .brand-icon-pulse {
+      position: absolute; inset: -4px; border-radius: 14px;
+      border: 1px solid rgba(59,139,212,0.25);
+      animation: iconPulse 3s ease-in-out infinite;
+    }
+    @keyframes iconPulse {
+      0%,100% { opacity: 0.6; transform: scale(1); }
+      50%      { opacity: 0.15; transform: scale(1.08); }
+    }
+
+    .brand-text-name {
+      font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--text);
+    }
+    .brand-text-sub {
+      font-size: 11px; color: var(--text2);
+      font-family: var(--mono); letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    .left-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 48px 0 32px; }
+
+    .headline {
+      font-size: clamp(30px, 3.5vw, 44px);
+      font-weight: 300; line-height: 1.18;
+      color: var(--text); letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .headline strong { font-weight: 600; color: var(--blue-lt); }
+
+    .tagline {
+      font-size: 15px; color: var(--text2); line-height: 1.65;
+      max-width: 420px; margin-bottom: 40px;
+    }
+
+    .feature-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; max-width: 460px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.025);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r-sm); padding: 16px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--border2);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .feature-card-icon {
+      width: 32px; height: 32px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .feature-card-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .feature-card-desc  { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+    .left-footer {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+
+    .arch-pill {
+      font-size: 10px; font-family: var(--mono);
+      font-weight: 500; padding: 4px 11px; border-radius: 20px;
+      letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .ap-fl     { background: rgba(127,119,221,0.12); color: var(--purple-lt); border: 0.5px solid rgba(127,119,221,0.25); }
+    .ap-edge   { background: rgba(29,158,117,0.1);   color: var(--teal-lt);   border: 0.5px solid rgba(29,158,117,0.22); }
+    .ap-cloud  { background: rgba(59,139,212,0.1);   color: var(--blue-lt);   border: 0.5px solid rgba(59,139,212,0.22); }
+    .ap-hipaa  { background: rgba(239,159,39,0.08);  color: var(--amber-lt);  border: 0.5px solid rgba(239,159,39,0.2);  }
+
+    .live-pill {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px; color: var(--teal); font-family: var(--mono);
+      margin-left: auto;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: livePulse 1s ease-in-out infinite; }
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
+
+    /* ── Right panel / Login form ───────────────────────────────── */
+    .right-panel {
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: clamp(28px, 4vw, 48px) clamp(28px, 5vw, 52px);
+      animation: fadeUp 0.7s 0.15s ease both;
+      border-left: 0.5px solid var(--border);
+    }
+
+    .login-card { width: 100%; max-width: 380px; }
+
+    .login-head { margin-bottom: 28px; }
+    .login-title { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+    .login-sub { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+    /* Role selector */
+    .role-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 24px;
+    }
+
+    .role-btn {
+      padding: 10px 8px; border-radius: var(--r-sm);
+      border: 0.5px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      cursor: pointer; text-align: center;
+      transition: all 0.15s; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .role-btn:hover   { background: rgba(255,255,255,0.05); border-color: var(--border2); }
+    .role-btn.active  { background: rgba(59,139,212,0.1); border-color: rgba(59,139,212,0.4); }
+
+    .role-icon-wrap {
+      width: 30px; height: 30px; border-radius: 50%;
+      margin: 0 auto 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .role-lbl  { font-size: 12px; font-weight: 500; color: var(--text); }
+    .role-desc { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+
+    /* Messages */
+    .msg-error {
+      background: rgba(226,75,74,0.1); border: 0.5px solid rgba(226,75,74,0.28);
+      border-radius: var(--r-sm); padding: 9px 13px;
+      font-size: 12px; color: var(--red-lt); font-family: var(--mono);
+      margin-bottom: 14px; display: none; animation: fadeUp 0.3s ease;
+    }
+    .msg-success {
+      background: rgba(29,158,117,0.1); border: 0.5px solid rgba(29,158,117,0.28);
+      border-radius: var(--r-sm); padding: 9px 13px;
+      font-size: 12px; color: var(--teal-lt);
+      margin-bottom: 14px; display: none;
+      align-items: center; gap: 8px; animation: fadeUp 0.3s ease;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 15px; }
+    .field-label {
+      display: block; font-size: 10px; color: var(--text2);
+      font-family: var(--mono); letter-spacing: 0.07em;
+      text-transform: uppercase; margin-bottom: 7px;
+    }
+    .field-wrap { position: relative; }
+
+    .field-input {
+      width: 100%; padding: 11px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid rgba(99,178,255,0.15);
+      border-radius: var(--r-sm);
+      font-size: 14px; font-family: var(--sans);
+      color: var(--text); outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .field-input::placeholder { color: var(--text3); }
+    .field-input:focus {
+      border-color: rgba(59,139,212,0.5);
+      background: rgba(59,139,212,0.045);
+    }
+    .field-input.has-icon-right { padding-right: 42px; }
+
+    .field-icon-right {
+      position: absolute; right: 13px; top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer; color: var(--text3);
+      transition: color 0.15s; line-height: 0;
+    }
+    .field-icon-right:hover { color: var(--text2); }
+
+    /* Inline row */
+    .field-inline {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .check-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text2); cursor: pointer;
+    }
+    .check-label input[type="checkbox"] {
+      width: 15px; height: 15px;
+      accent-color: var(--blue); cursor: pointer;
+    }
+    .link-sm {
+      font-size: 12px; color: var(--blue-lt);
+      font-family: var(--mono); text-decoration: none;
+      transition: color 0.15s;
+    }
+    .link-sm:hover { color: var(--blue); }
+
+    /* CTA button */
+    .btn-cta {
+      width: 100%; padding: 13px;
+      background: var(--blue-dk); color: var(--text);
+      border: none; border-radius: var(--r-sm);
+      font-size: 14px; font-weight: 500; font-family: var(--sans);
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      letter-spacing: 0.02em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-cta:hover  { background: var(--blue); }
+    .btn-cta:active { transform: scale(0.99); }
+    .btn-cta:disabled { opacity: 0.6; pointer-events: none; }
+
+    .btn-spinner {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      animation: spin 0.65s linear infinite;
+      display: none; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 18px 0 16px; font-size: 11px; color: var(--text3);
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 0.5px;
+      background: rgba(99,178,255,0.1);
+    }
+
+    /* SSO button */
+    .btn-sso {
+      width: 100%; padding: 11px;
+      background: rgba(255,255,255,0.03);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text2); font-size: 13px; font-family: var(--sans);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-sso:hover { background: rgba(255,255,255,0.06); border-color: var(--border2); }
+
+    /* MFA section */
+    .mfa-wrap { display: none; }
+    .mfa-hint { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-bottom: 10px; }
+
+    .otp-row { display: flex; gap: 8px; }
+    .otp-box {
+      flex: 1; padding: 12px 6px; text-align: center;
+      font-size: 20px; font-family: var(--mono); font-weight: 500;
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r-sm); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .otp-box:focus { border-color: rgba(59,139,212,0.55); background: rgba(59,139,212,0.04); }
+
+    .link-back {
+      display: block; text-align: center; margin-top: 12px;
+      font-size: 12px; color: var(--text2); font-family: var(--mono);
+      text-decoration: none; cursor: pointer; transition: color 0.15s;
+    }
+    .link-back:hover { color: var(--blue-lt); }
+
+    /* Security footer */
+    .sec-footer {
+      margin-top: 22px; text-align: center;
+      font-size: 10px; color: var(--text3);
+      font-family: var(--mono); letter-spacing: 0.04em;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      flex-wrap: wrap; gap: 5px 12px;
+    }
+    .sec-item { display: flex; align-items: center; gap: 4px; }
+
+    /* ── Demo hint ───────────────────────────────────────────────── */
+    .demo-hint {
+      background: rgba(59,139,212,0.06);
+      border: 0.5px solid rgba(59,139,212,0.18);
+      border-radius: var(--r-sm); padding: 10px 14px;
+      font-size: 11px; color: var(--text2);
+      font-family: var(--mono); margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .demo-hint strong { color: var(--blue-lt); }
+
+    /* ── Success screen ──────────────────────────────────────────── */
+    .success-screen {
+      display: none; text-align: center;
+      animation: fadeUp 0.5s ease;
+    }
+    .success-check {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(29,158,117,0.12);
+      border: 0.5px solid rgba(29,158,117,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      animation: checkPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes checkPop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .success-name { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+    .success-sub { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-bottom: 24px; }
+
+    .redirect-bar-wrap {
+      height: 3px; background: rgba(255,255,255,0.08);
+      border-radius: 2px; overflow: hidden; margin-bottom: 10px;
+    }
+    .redirect-bar {
+      height: 100%; background: var(--teal); border-radius: 2px;
+      width: 0; transition: width 2.4s linear;
+    }
+    .redirect-hint { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .page-wrap { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .left-panel {
+        border-right: none;
+        border-bottom: 0.5px solid var(--border);
+        padding: 28px 24px 24px;
+      }
+      .left-main { padding: 24px 0 20px; }
+      .headline { font-size: 26px; }
+      .tagline { font-size: 13px; margin-bottom: 24px; }
+      .feature-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .feature-card { padding: 12px; }
+      .left-footer { gap: 7px; }
+      .right-panel { padding: 32px 24px; min-height: auto; }
+      .blob-1, .blob-2, .blob-3 { display: none; }
+    }
+
+    @media (max-width: 540px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .page-wrap { grid-template-rows: auto 1fr; }
+    }
+
+    @media (max-width: 400px) {
+      .role-grid { grid-template-columns: 1fr 1fr; }
+      .otp-row { gap: 5px; }
+      .otp-box { font-size: 16px; padding: 10px 4px; }
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- Background decorations -->
+  <div class="bg-grid"></div>
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
+  <div class="page-wrap">
+
+    <!-- ── Left panel ─────────────────────────────────────────── -->
+    <div class="left-panel">
+
+      <div class="brand-lockup">
+        <div class="brand-icon">
+          <div class="brand-icon-pulse"></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="#85B7EB" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M9 12l2 2 4-4" stroke="#85B7EB" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-text-name">MedEdge</div>
+          <div class="brand-text-sub">Clinical Intelligence Platform</div>
+        </div>
+      </div>
+
+      <div class="left-main">
+        <div class="headline">
+          Real-time vitals,<br>
+          <strong>federated intelligence.</strong>
+        </div>
+        <p class="tagline">
+          A secure, HIPAA-compliant monitoring platform powered by edge inference and privacy-preserving federated learning — built for clinical environments across any device.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-card-icon" style="background:rgba(59,139,212,0.12);border:0.5px solid rgba(59,139,212,0.2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <polyline points="2,12 8,12 10,4 12,20 14,10 16,14 18,14 22,14" stroke="#85B7EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="feature-card-title">Live vitals streaming</div>
+            <div class="feature-card-desc">HR, SpO₂, temperature at sub-50ms edge latency</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-icon" style="background:rgba(127,119,221,0.1);border:0.5px solid rgba(127,119,221,0.2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#AFA9EC" stroke-width="1.5"/>
+                <path d="M7 11V7a5 5 0 0110 0v4" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="feature-card-title">Federated learning</div>
+            <div class="feature-card-desc">Data stays on device — only encrypted gradients sync</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-icon" style="background:rgba(29,158,117,0.1);border:0.5px solid rgba(29,158,117,0.2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="#5DCAA5" stroke-width="1.5"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M12 14v4M10 16h4" stroke="#5DCAA5" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="feature-card-title">Role-based access</div>
+            <div class="feature-card-desc">Scoped sessions for doctors, nurses, admins</div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card-icon" style="background:rgba(239,159,39,0.1);border:0.5px solid rgba(239,159,39,0.2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 1v3M10 1v3M14 1v3" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="feature-card-title">Instant alerts</div>
+            <div class="feature-card-desc">Threshold-triggered notifications to care team</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="left-footer">
+        <span class="arch-pill ap-fl">FL v2.4</span>
+        <span class="arch-pill ap-edge">Edge</span>
+        <span class="arch-pill ap-cloud">Cloud</span>
+        <span class="arch-pill ap-hipaa">HIPAA</span>
+        <div class="live-pill">
+          <div class="live-dot"></div>
+          All systems online
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right panel / Login ─────────────────────────────────── -->
+    <div class="right-panel">
+      <div class="login-card">
+
+        <div class="login-head">
+          <div class="login-title">Sign in</div>
+          <div class="login-sub">secure · role-scoped · audited · v2.4</div>
+        </div>
+
+        <!-- Role selector -->
+        <div class="role-grid" id="roleGrid">
+          <div class="role-btn active" onclick="selectRole(this,'doctor')" data-role="doctor">
+            <div class="role-icon-wrap" style="background:rgba(59,139,212,0.15);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="#85B7EB" stroke-width="1.4"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#85B7EB" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M12 15v4M10 17h4" stroke="#85B7EB" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="role-lbl">Doctor</div>
+            <div class="role-desc">Full access</div>
+          </div>
+
+          <div class="role-btn" onclick="selectRole(this,'nurse')" data-role="nurse">
+            <div class="role-icon-wrap" style="background:rgba(29,158,117,0.12);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="#5DCAA5" stroke-width="1.4"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#5DCAA5" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="role-lbl">Nurse</div>
+            <div class="role-desc">Monitor only</div>
+          </div>
+
+          <div class="role-btn" onclick="selectRole(this,'admin')" data-role="admin">
+            <div class="role-icon-wrap" style="background:rgba(239,159,39,0.12);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="8" stroke="#FAC775" stroke-width="1.4"/>
+                <circle cx="12" cy="12" r="2.5" stroke="#FAC775" stroke-width="1.4"/>
+                <path d="M12 4v3M12 17v3M4 12h3M17 12h3" stroke="#FAC775" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="role-lbl">Admin</div>
+            <div class="role-desc">System config</div>
+          </div>
+
+          <div class="role-btn" onclick="selectRole(this,'patient')" data-role="patient">
+            <div class="role-icon-wrap" style="background:rgba(127,119,221,0.12);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="#AFA9EC" stroke-width="1.4"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#AFA9EC" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="role-lbl">Patient</div>
+            <div class="role-desc">Own data</div>
+          </div>
+        </div>
+
+        <!-- Demo hint -->
+        <div class="demo-hint" id="demoHint">
+          Demo — Doctor: <strong>DR001</strong> / <strong>doctor123</strong><br>
+          Nurse: <strong>NR101</strong> / <strong>nurse123</strong> &nbsp;·&nbsp; Admin: <strong>AD001</strong> / <strong>admin123</strong>
+        </div>
+
+        <!-- Messages -->
+        <div class="msg-error"   id="msgErr"></div>
+        <div class="msg-success" id="msgOk"></div>
+
+        <!-- Login form -->
+        <div id="loginForm">
+          <div class="field">
+            <label class="field-label" for="emailInp">Employee ID / Email</label>
+            <div class="field-wrap">
+              <input class="field-input" id="emailInp" type="text"
+                     placeholder="DR001 or dr.name@hospital.org"
+                     autocomplete="username" autocorrect="off"
+                     autocapitalize="none" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="passInp">Password</label>
+            <div class="field-wrap">
+              <input class="field-input has-icon-right" id="passInp"
+                     type="password" placeholder="Enter password"
+                     autocomplete="current-password">
+              <span class="field-icon-right" id="eyeBtn" onclick="toggleEye()">
+                <svg id="eyeIconOpen" width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.4"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+                <svg id="eyeIconClosed" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none;">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-6.364 0-10-7-10-7a17.6 17.6 0 014.72-5.36M9.9 4.24A9.12 9.12 0 0112 4c6.364 0 10 7 10 7a17.6 17.6 0 01-2.06 3.1M1 1l22 22" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="field-inline">
+            <label class="check-label">
+              <input type="checkbox" id="rememberChk">
+              <span>Remember this device</span>
+            </label>
+            <a href="#" class="link-sm" onclick="forgotPwd(event)">Forgot password?</a>
+          </div>
+
+          <button class="btn-cta" id="loginBtn" onclick="doLogin()">
+            <div class="btn-spinner" id="btnSpin"></div>
+            <span id="btnTxt">Sign in to dashboard</span>
+          </button>
+
+          <div class="divider">or continue with</div>
+
+          <button class="btn-sso" onclick="doSSO()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/>
+            </svg>
+            Hospital SSO
+          </button>
+        </div>
+
+        <!-- MFA section -->
+        <div class="mfa-wrap" id="mfaWrap">
+          <div class="mfa-hint" id="mfaHint">Enter the 6-digit code sent to your registered device</div>
+          <div class="otp-row">
+            <input class="otp-box" id="o0" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+            <input class="otp-box" id="o1" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+            <input class="otp-box" id="o2" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+            <input class="otp-box" id="o3" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+            <input class="otp-box" id="o4" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+            <input class="otp-box" id="o5" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+          </div>
+          <button class="btn-cta" style="margin-top:16px;" onclick="verifyOTP()">
+            <div class="btn-spinner" id="otpSpin"></div>
+            <span id="otpTxt">Verify &amp; enter dashboard</span>
+          </button>
+          <a class="link-back" onclick="backToLogin()">← Back to login</a>
+        </div>
+
+        <!-- Success screen -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-check">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="success-name" id="succName">Welcome, Doctor</div>
+          <div class="success-sub" id="succSub">Session authenticated · Redirecting…</div>
+          <div class="redirect-bar-wrap">
+            <div class="redirect-bar" id="redirectBar"></div>
+          </div>
+          <div class="redirect-hint">Loading dashboard…</div>
+        </div>
+
+        <!-- Security footer -->
+        <div class="sec-footer">
+          <span class="sec-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+            HIPAA compliant
+          </span>
+          <span class="sec-item">TLS 1.3</span>
+          <span class="sec-item">AES-256</span>
+          <span class="sec-item">Zero-trust</span>
+          <span class="sec-item">MFA enforced</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── State ────────────────────────────────────────────────────
+    const CREDS = {
+      doctor:  { id: 'DR001',  pass: 'doctor123',  name: 'Dr. Arjun Sharma', sub: 'Doctor · ICU-3 · Full access' },
+      nurse:   { id: 'NR101',  pass: 'nurse123',   name: 'Nurse Priya',      sub: 'Nurse · Cardiac-1 · Monitor access' },
+      admin:   { id: 'AD001',  pass: 'admin123',   name: 'Admin',            sub: 'Administrator · System config' },
+      patient: { id: 'P001',   pass: 'patient123', name: 'Arjun Sharma',     sub: 'Patient · Gen-4 · Own data' },
+    };
+
+    let role = 'doctor';
+    let eyeOpen = false;
+
+    // ── Role selection ───────────────────────────────────────────
+    function selectRole(el, r) {
+      role = r;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      const c = CREDS[r];
+      document.getElementById('emailInp').placeholder = c.id + ' or email@hospital.org';
+      clearMsgs();
+    }
+
+    // ── Eye toggle ───────────────────────────────────────────────
+    function toggleEye() {
+      eyeOpen = !eyeOpen;
+      document.getElementById('passInp').type = eyeOpen ? 'text' : 'password';
+      document.getElementById('eyeIconOpen').style.display  = eyeOpen ? 'none'  : 'block';
+      document.getElementById('eyeIconClosed').style.display = eyeOpen ? 'block' : 'none';
+    }
+
+    // ── Messages ─────────────────────────────────────────────────
+    function showErr(msg) {
+      const el = document.getElementById('msgErr');
+      el.textContent = msg; el.style.display = 'block';
+      document.getElementById('msgOk').style.display = 'none';
+    }
+
+    function showOk(msg) {
+      const el = document.getElementById('msgOk');
+      el.style.display = 'flex'; el.textContent = msg;
+      document.getElementById('msgErr').style.display = 'none';
+    }
+
+    function clearMsgs() {
+      document.getElementById('msgErr').style.display = 'none';
+      document.getElementById('msgOk').style.display  = 'none';
+    }
+
+    // ── Forgot password ──────────────────────────────────────────
+    function forgotPwd(e) {
+      e.preventDefault();
+      const el = document.getElementById('msgErr');
+      el.style.display = 'block';
+      el.style.background = 'rgba(59,139,212,0.07)';
+      el.style.borderColor = 'rgba(59,139,212,0.22)';
+      el.style.color = '#85B7EB';
+      el.textContent = 'Contact hospital IT: it-support@hospital.org or ext. 4400';
+    }
+
+    // ── SSO ──────────────────────────────────────────────────────
+    function doSSO() {
+      clearMsgs();
+      showOk('Redirecting to hospital SSO provider…');
+    }
+
+    // ── Login ────────────────────────────────────────────────────
+    function doLogin() {
+      clearMsgs();
+      const email = document.getElementById('emailInp').value.trim();
+      const pass  = document.getElementById('passInp').value;
+
+      if (!email) { showErr('Please enter your Employee ID or email address.'); return; }
+      if (!pass)  { showErr('Please enter your password.'); return; }
+      if (pass.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+        const c = CREDS[role];
+        const emailOk = email === c.id || email.toLowerCase() === c.id.toLowerCase() || email.includes('@');
+        const passOk  = pass === c.pass || pass.length >= 6;
+
+        if (emailOk && passOk) {
+          if (role === 'doctor' || role === 'admin') {
+            showMFA();
+          } else {
+            loginSuccess();
+          }
+        } else {
+          showErr('Invalid credentials. Hint: ' + c.id + ' / ' + c.pass);
+        }
+      }, 1500);
+    }
+
+    function setLoading(on) {
+      const btn = document.getElementById('loginBtn');
+      const spin = document.getElementById('btnSpin');
+      const txt  = document.getElementById('btnTxt');
+      btn.disabled = on;
+      spin.style.display = on ? 'block' : 'none';
+      txt.textContent = on ? 'Authenticating…' : 'Sign in to dashboard';
+    }
+
+    // ── MFA ──────────────────────────────────────────────────────
+    function showMFA() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('demoHint').style.display  = 'none';
+      document.getElementById('mfaWrap').style.display   = 'block';
+      showOk('Password verified. Enter your MFA code to continue.');
+      setTimeout(() => document.getElementById('o0').focus(), 200);
+      setupOTP();
+    }
+
+    function setupOTP() {
+      const boxes = [0,1,2,3,4,5].map(i => document.getElementById('o'+i));
+      boxes.forEach((box, i) => {
+        box.value = '';
+        box.addEventListener('input', () => {
+          if (box.value && i < 5) boxes[i+1].focus();
+          if (i === 5 && box.value) setTimeout(verifyOTP, 350);
+        });
+        box.addEventListener('keydown', e => {
+          if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+        });
+        box.addEventListener('paste', e => {
+          e.preventDefault();
+          const data = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+          data.split('').slice(0,6).forEach((ch, j) => { if(boxes[j]) boxes[j].value = ch; });
+          if(boxes[Math.min(data.length, 5)]) boxes[Math.min(data.length, 5)].focus();
+        });
+      });
+    }
+
+    function verifyOTP() {
+      const code = [0,1,2,3,4,5].map(i => document.getElementById('o'+i).value).join('');
+      if (code.length < 6) { showErr('Please enter all 6 digits.'); return; }
+
+      const btn  = document.getElementById('loginBtn');
+      const spin = document.getElementById('otpSpin');
+      const txt  = document.getElementById('otpTxt');
+      spin.style.display = 'block';
+      txt.textContent = 'Verifying…';
+
+      setTimeout(() => {
+        spin.style.display = 'none';
+        txt.textContent = 'Verify & enter dashboard';
+        loginSuccess();
+      }, 1000);
+    }
+
+    function backToLogin() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('demoHint').style.display  = 'block';
+      document.getElementById('mfaWrap').style.display   = 'none';
+      clearMsgs();
+    }
+
+    // ── Success ───────────────────────────────────────────────────
+    function loginSuccess() {
+      const c = CREDS[role];
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('mfaWrap').style.display   = 'none';
+      document.getElementById('demoHint').style.display  = 'none';
+      document.getElementById('roleGrid').style.display  = 'none';
+      document.getElementById('msgErr').style.display    = 'none';
+      document.getElementById('msgOk').style.display     = 'none';
+
+      document.getElementById('succName').textContent = 'Welcome, ' + c.name;
+      document.getElementById('succSub').textContent  = c.sub + ' · Session active';
+
+      const screen = document.getElementById('successScreen');
+      screen.style.display = 'block';
+
+      setTimeout(() => {
+        document.getElementById('redirectBar').style.width = '100%';
+      }, 100);
+
+      setTimeout(() => {
+        const params = new URLSearchParams({ role, name: c.name, ward: c.sub });
+        window.location.href = 'dashboard.html?' + params.toString();
+      }, 2800);
+    }
+  </script>
+</body>
+</html>
