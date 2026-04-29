@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MediPulse — Smart Hospital Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#111823;--bg4:#16202e;
+  --card:#0f1520;--card2:#131d2a;
+  --border:#1e2d42;--border2:#2a3f5e;--border3:#3a5070;
+  --text:#ddeeff;--text2:#8ba3be;--text3:#4a6480;
+  --blue:#2563eb;--blue2:#3b82f6;--blue3:#60a5fa;--blue4:#93c5fd;
+  --green:#059669;--green2:#10b981;--green3:#34d399;
+  --red:#dc2626;--red2:#ef4444;--red3:#f87171;
+  --amber:#d97706;--amber2:#f59e0b;--amber3:#fbbf24;
+  --purple:#7c3aed;--purple2:#8b5cf6;--purple3:#a78bfa;
+  --teal:#0d9488;--teal2:#14b8a6;--teal3:#2dd4bf;
+  --pink:#be185d;--pink2:#ec4899;--pink3:#f472b6;
+  --cyan:#0891b2;--cyan2:#06b6d4;--cyan3:#22d3ee;
+  --font:'DM Sans',sans-serif;
+  --mono:'Space Mono',monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px}
+
+/* ═══════════ SCREENS ═══════════ */
+.screen{display:none;width:100vw;height:100vh}
+.screen.active{display:flex}
+
+/* ═══════════ ROLE SELECT ═══════════ */
+#s-roles{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+#s-roles::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 100% 70% at 50% -10%,rgba(37,99,235,.15) 0%,transparent 60%);pointer-events:none}
+#s-roles::after{content:'';position:absolute;bottom:-100px;left:50%;transform:translateX(-50%);width:600px;height:200px;background:radial-gradient(ellipse,rgba(37,99,235,.08),transparent 70%);pointer-events:none}
+.hero{text-align:center;margin-bottom:52px;animation:fadeUp .6s ease both}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,.12);border:1px solid rgba(59,130,246,.25);border-radius:20px;padding:5px 16px;font-size:11px;color:var(--blue3);letter-spacing:1.5px;font-weight:600;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-size:52px;font-weight:700;letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,#93c5fd 0%,#3b82f6 50%,#818cf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:15px;color:var(--text2);margin-top:12px;font-weight:300}
+.roles-row{display:flex;gap:20px;animation:fadeUp .6s .15s ease both;opacity:0;animation-fill-mode:forwards}
+.role-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 28px;width:240px;cursor:pointer;transition:all .3s;display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;border-radius:20px}
+.rc-doc::before{background:radial-gradient(ellipse at 30% 0%,rgba(37,99,235,.18),transparent 60%)}
+.rc-nur::before{background:radial-gradient(ellipse at 30% 0%,rgba(13,148,136,.18),transparent 60%)}
+.rc-pat::before{background:radial-gradient(ellipse at 30% 0%,rgba(124,58,237,.18),transparent 60%)}
+.role-card:hover{transform:translateY(-6px);border-color:var(--border2)}
+.role-card:hover::before{opacity:1}
+.role-card:hover .rc-icon{transform:scale(1.1)}
+.rc-icon{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;transition:transform .3s;position:relative}
+.rc-doc .rc-icon{background:rgba(37,99,235,.15);box-shadow:0 0 30px rgba(37,99,235,.2)}
+.rc-nur .rc-icon{background:rgba(13,148,136,.15);box-shadow:0 0 30px rgba(13,148,136,.2)}
+.rc-pat .rc-icon{background:rgba(124,58,237,.15);box-shadow:0 0 30px rgba(124,58,237,.2)}
+.rc-title{font-size:19px;font-weight:700;letter-spacing:.3px}
+.rc-desc{font-size:12px;color:var(--text2);text-align:center;line-height:1.5}
+.rc-2fa{background:rgba(245,158,11,.1);color:var(--amber3);border:1px solid rgba(245,158,11,.25);border-radius:20px;font-size:10px;padding:3px 10px;font-weight:700;letter-spacing:.5px;font-family:var(--mono)}
+
+/* ═══════════ LOGIN FORM ═══════════ */
+#s-login{align-items:center;justify-content:center;background:var(--bg)}
+.lf-wrap{background:var(--card);border:1px solid var(--border);border-radius:24px;width:420px;padding:44px;animation:fadeUp .4s ease}
+.lf-top{display:flex;align-items:center;gap:14px;margin-bottom:32px}
+.lf-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.lf-titles h2{font-size:22px;font-weight:700}
+.lf-titles p{font-size:12px;color:var(--text2);margin-top:3px}
+.lf-role-row{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:24px;font-size:13px;color:var(--text2)}
+.inp-g{margin-bottom:18px}
+.inp-g label{display:block;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border .2s,box-shadow .2s}
+.inp:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.inp::placeholder{color:var(--text3)}
+.btn-main{width:100%;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:var(--font)}
+.btn-main:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.35)}
+.btn-sec{width:100%;padding:11px;border-radius:11px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;transition:all .2s;margin-top:10px;font-family:var(--font)}
+.btn-sec:hover{border-color:var(--border2);color:var(--text)}
+.err-box{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--red3);margin-bottom:16px;display:none}
+.ok-box{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--green3);margin-bottom:16px;display:none}
+/* OTP */
+.otp-area{text-align:center;margin-bottom:20px}
+.otp-area .otp-ico{font-size:36px;margin-bottom:12px}
+.otp-area h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.otp-area p{font-size:12px;color:var(--text2);line-height:1.6}
+.otp-area p b{color:var(--blue3)}
+.otp-row{display:flex;gap:12px;justify-content:center;margin:20px 0 8px}
+.otp-inp{width:56px;height:60px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;text-align:center;font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono);outline:none;transition:border .2s}
+.otp-inp:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.otp-hint{font-size:11px;color:var(--text3);text-align:center}
+
+/* ═══════════ DASHBOARD ═══════════ */
+#s-dash{flex-direction:column;height:100vh;overflow:hidden}
+/* Topbar */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;z-index:10}
+.tb-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;letter-spacing:-0.5px}
+.tb-logo-ico{width:36px;height:36px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tb-logo span{color:var(--blue3)}
+.sep{width:1px;height:22px;background:var(--border)}
+.tb-live{display:flex;align-items:center;gap:6px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green3);box-shadow:0 0 8px var(--green3);animation:pulse 2s infinite}
+.live-txt{font-size:11px;color:var(--green3);font-weight:600;letter-spacing:.5px}
+.spacer{flex:1}
+.tb-fl{font-size:11px;color:var(--text3)}
+.tb-model{background:rgba(59,130,246,.12);color:var(--blue3);border:1px solid rgba(59,130,246,.2);border-radius:20px;font-size:10px;padding:3px 10px;font-weight:700;font-family:var(--mono)}
+.tb-clock{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-family:var(--mono);font-size:12px;color:var(--text2)}
+.tb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;cursor:pointer;font-family:var(--mono)}
+.tb-logout{background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.tb-logout:hover{border-color:var(--red3);color:var(--red3)}
+
+/* Layout */
+.dash-body{display:flex;flex:1;overflow:hidden}
+/* Sidebar */
+.sidebar{width:210px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.sidebar::-webkit-scrollbar{width:0}
+.sb-sec{padding:16px 10px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1.8px;text-transform:uppercase;padding:0 8px;margin-bottom:8px}
+.nav-i{display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:10px;cursor:pointer;font-size:12px;color:var(--text2);transition:all .2s;margin-bottom:2px;font-weight:500}
+.nav-i:hover{background:var(--bg3);color:var(--text)}
+.nav-i.on{background:rgba(37,99,235,.12);color:var(--blue3);border:1px solid rgba(37,99,235,.2)}
+.nav-ico{font-size:14px;width:18px;text-align:center}
+.sb-phone{margin:10px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px}
+.sbp-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+.sbp-num{font-family:var(--mono);font-size:12px;color:var(--cyan3);font-weight:700}
+.sbp-sub{font-size:10px;color:var(--text3);margin-top:3px}
+/* Patient list */
+.pat-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:2px}
+.pat-item:hover{background:var(--bg3)}
+.pat-item.sel{background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.18)}
+.pa-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:var(--mono)}
+.pa-nm{font-size:11px;font-weight:600}
+.pa-id{font-size:10px;color:var(--text3)}
+.pa-dot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.pa-dot.ok{background:var(--green3)}
+.pa-dot.warn{background:var(--amber3);animation:pulse 1.5s infinite}
+.pa-dot.crit{background:var(--red3);animation:pulse .7s infinite}
+
+/* Panel */
+.panel-wrap{flex:1;overflow-y:auto;padding:20px;background:var(--bg)}
+.panel-wrap::-webkit-scrollbar{width:5px}
+.panel-wrap::-webkit-scrollbar-track{background:transparent}
+.panel-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* Patient header */
+.pat-hdr{display:flex;align-items:center;gap:16px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 20px}
+.phr-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+.phr-name{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.phr-sub{font-size:12px;color:var(--text2);margin-top:3px}
+.phr-badge{margin-left:auto;border-radius:20px;font-size:11px;padding:4px 14px;font-weight:700}
+.phr-badge.ok{background:rgba(52,211,153,.12);color:var(--green3);border:1px solid rgba(52,211,153,.25)}
+.phr-badge.warn{background:rgba(251,191,36,.12);color:var(--amber3);border:1px solid rgba(251,191,36,.25)}
+.phr-badge.crit{background:rgba(248,113,113,.12);color:var(--red3);border:1px solid rgba(248,113,113,.25)}
+
+/* Alert banner */
+.alert-banner{display:none;background:rgba(220,38,38,.08);border:1px solid rgba(239,68,68,.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;animation:slideDown .4s ease}
+.alert-banner.show{display:flex;align-items:center;gap:14px}
+.ab-ico{font-size:24px;animation:shake 1s infinite}
+.ab-title{font-size:14px;font-weight:700;color:var(--red3)}
+.ab-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.ab-btns{margin-left:auto;display:flex;gap:8px}
+.ab-btn{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.ab-ack{background:rgba(239,68,68,.2);color:var(--red3)}
+.ab-sms{background:rgba(34,211,238,.1);color:var(--cyan3);border:1px solid rgba(34,211,238,.2)}
+
+/* Vital cards */
+.vitals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.vc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;position:relative;overflow:hidden;transition:border .3s,box-shadow .3s}
+.vc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+.vc.heart::before{background:linear-gradient(90deg,#be185d,#f472b6)}
+.vc.spo2::before{background:linear-gradient(90deg,#0891b2,#22d3ee)}
+.vc.bp::before{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.vc.temp::before{background:linear-gradient(90deg,#d97706,#f87171)}
+.vc.alert{box-shadow:0 0 20px rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);animation:vcPulse 1.2s infinite}
+.vc-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.vc-val{font-family:var(--mono);font-size:38px;font-weight:700;line-height:1;transition:color .3s}
+.vc-unit{font-size:11px;color:var(--text2);margin-top:2px}
+.vc-range{font-size:10px;color:var(--text3);margin-top:8px}
+.vc-status{font-size:10px;margin-top:6px;font-weight:700;display:flex;align-items:center;gap:4px}
+.vc-bar{height:3px;background:var(--bg3);border-radius:3px;margin-top:10px;overflow:hidden}
+.vc-fill{height:100%;border-radius:3px;transition:width .6s,background .6s}
+
+/* ECG */
+.ecg-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px}
+.ecg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ecg-title{font-size:13px;font-weight:700}
+.ecg-badge{font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px}
+.ecg-badge.ok{background:rgba(52,211,153,.1);color:var(--green3);border:1px solid rgba(52,211,153,.2)}
+.ecg-badge.crit{background:rgba(248,113,113,.1);color:var(--red3);border:1px solid rgba(248,113,113,.2)}
+.ecg-bg{background:#060d1a;border-radius:10px;padding:8px;position:relative}
+canvas{display:block;width:100%}
+
+/* Charts */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.chart-title{font-size:12px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;color:var(--text2)}
+.chart-pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--text2)}
+
+/* ═══ REAL TERMINAL CONSOLE ═══ */
+.console-card{
+  background:#010508;
+  border:1px solid #0d2a10;
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:18px;
+  box-shadow:0 0 0 1px #0a1a0a,0 8px 32px rgba(0,0,0,.7),0 0 60px rgba(52,211,153,.04),inset 0 1px 0 rgba(52,211,153,.05);
+  font-family:var(--mono);
+  position:relative;
+}
+.console-card::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);border-radius:12px;z-index:1}
+/* macOS-style title bar */
+.con-titlebar{
+  background:linear-gradient(180deg,#1e2a1e 0%,#131c13 100%);
+  border-bottom:1px solid #0d1a0d;
+  padding:9px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  position:relative;
+}
+.con-dots{display:flex;gap:6px}
+.con-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;transition:filter .2s}
+.con-dot:hover{filter:brightness(1.3)}
+.cd-close{background:radial-gradient(circle at 40% 35%,#ff7c6e,#ff3b30);box-shadow:0 0 4px rgba(255,59,48,.4)}
+.cd-min{background:radial-gradient(circle at 40% 35%,#ffd46e,#ffcc00);box-shadow:0 0 4px rgba(255,204,0,.4)}
+.cd-max{background:radial-gradient(circle at 40% 35%,#7eda6e,#28cd41);box-shadow:0 0 4px rgba(40,205,65,.4)}
+.con-title-text{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-size:11px;color:#4a7a4a;letter-spacing:.5px;
+  font-family:var(--mono);
+}
+.con-title-right{font-family:var(--mono);font-size:9px;color:#1a3a1a;margin-left:auto}
+/* log spans */
+.log-src{font-style:normal}
+.log-mod{font-style:normal}
+/* Sim toolbar */
+.con-toolbar{
+  background:#050d05;
+  border-bottom:1px solid #0d1a0d;
+  padding:7px 14px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.sim-label{font-size:9px;color:#3a5a3a;letter-spacing:1.5px;text-transform:uppercase;margin-right:4px}
+.sim-btn{
+  font-family:var(--mono);font-size:10px;
+  border:1px solid;border-radius:5px;
+  padding:4px 10px;cursor:pointer;
+  transition:all .18s;background:transparent;
+  font-weight:700;letter-spacing:.3px;
+}
+.sim-btn:hover{transform:translateY(-1px)}
+.sb-normal{color:#34d399;border-color:#1a4a2a}
+.sb-normal:hover{background:rgba(52,211,153,.12);border-color:#34d399;box-shadow:0 0 8px rgba(52,211,153,.2)}
+.sb-warn{color:#fbbf24;border-color:#3a3010}
+.sb-warn:hover{background:rgba(251,191,36,.1);border-color:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.2)}
+.sb-crit{color:#f87171;border-color:#3a1010}
+.sb-crit:hover{background:rgba(248,113,113,.1);border-color:#f87171;box-shadow:0 0 8px rgba(248,113,113,.2)}
+.sb-fl{color:#a78bfa;border-color:#2a1a4a}
+.sb-fl:hover{background:rgba(167,139,250,.1);border-color:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.2)}
+.sb-sms{color:#22d3ee;border-color:#0a2a3a}
+.sb-sms:hover{background:rgba(34,211,238,.1);border-color:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,.2)}
+.sb-clear{color:#4a6a4a;border-color:#1a2a1a}
+.sb-clear:hover{background:rgba(74,106,74,.1);border-color:#4a6a4a}
+.sim-auto-wrap{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sim-auto-btn{
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  border-radius:5px;padding:4px 12px;cursor:pointer;
+  border:1px solid #1a4a1a;color:#34d399;background:rgba(52,211,153,.08);
+  transition:all .2s;letter-spacing:.3px;
+  box-shadow:0 0 0 0 rgba(52,211,153,0);
+}
+.sim-auto-btn:hover{background:rgba(52,211,153,.14);box-shadow:0 0 8px rgba(52,211,153,.2);transform:translateY(-1px)}
+.sim-auto-btn.running{
+  color:#fff;border-color:#f87171;background:rgba(248,113,113,.15);
+  animation:simPulse 1.2s infinite;
+}
+@keyframes simPulse{0%,100%{box-shadow:0 0 6px 0 rgba(248,113,113,.3)}50%{box-shadow:0 0 14px 4px rgba(248,113,113,.5)}}
+.sim-status{font-size:9px;color:#2a4a2a;font-family:var(--mono);letter-spacing:1px;padding:3px 8px;border-radius:4px;border:1px solid #1a3a1a}
+.sim-status.on{color:#f87171;border-color:#3a1a1a;background:rgba(248,113,113,.08);animation:liveGlow 1s infinite}
+@keyframes liveGlow{0%,100%{text-shadow:0 0 4px rgba(248,113,113,.6)}50%{text-shadow:0 0 10px rgba(248,113,113,1)}}
+/* Console body */
+.console-body{
+  background:#010508;
+  padding:10px 14px;
+  max-height:240px;
+  overflow-y:auto;
+  font-size:11.5px;
+  line-height:1;
+}
+.console-body::-webkit-scrollbar{width:4px}
+.console-body::-webkit-scrollbar-track{background:#010508}
+.console-body::-webkit-scrollbar-thumb{background:#1a2f1a;border-radius:2px}
+/* Log lines */
+.log-line{display:flex;align-items:baseline;gap:0;padding:1.5px 0;line-height:1.65}
+.log-ln{color:#1a3020;margin-right:10px;font-size:9px;min-width:26px;text-align:right;user-select:none}
+.log-ts{color:#1e4028;margin-right:8px;font-size:10px;flex-shrink:0}
+.log-lvl{margin-right:7px;font-size:9px;font-weight:700;letter-spacing:.3px;flex-shrink:0;min-width:42px}
+.log-msg{word-break:break-all}
+/* level colors — vivid terminal palette */
+.lvl-INFO .log-ln,.lvl-INFO .log-ts{color:#1a4a5a}
+.lvl-INFO .log-lvl{color:#0e8fb5;text-shadow:0 0 8px rgba(14,143,181,.4)}
+.lvl-INFO .log-msg{color:#4dc8e8}
+.lvl-INFO .log-src{color:#0a6a80}
+.lvl-INFO .log-mod{color:#0a4a5a}
+
+.lvl-WARN .log-ln,.lvl-WARN .log-ts{color:#3a2a00}
+.lvl-WARN .log-lvl{color:#c9940a;text-shadow:0 0 8px rgba(201,148,10,.4)}
+.lvl-WARN .log-msg{color:#f0be30}
+.lvl-WARN .log-src{color:#8a6000}
+.lvl-WARN .log-mod{color:#5a4000}
+
+.lvl-ERROR .log-ln,.lvl-ERROR .log-ts{color:#3a0a0a}
+.lvl-ERROR .log-lvl{color:#c03030;text-shadow:0 0 8px rgba(192,48,48,.4)}
+.lvl-ERROR .log-msg{color:#f06060}
+.lvl-ERROR .log-src{color:#801a1a}
+.lvl-ERROR .log-mod{color:#5a1010}
+
+.lvl-OK .log-ln,.lvl-OK .log-ts{color:#0a2a10}
+.lvl-OK .log-lvl{color:#0ea84a;text-shadow:0 0 8px rgba(14,168,74,.5)}
+.lvl-OK .log-msg{color:#34d880}
+.lvl-OK .log-src{color:#0a7030}
+.lvl-OK .log-mod{color:#0a4a20}
+
+.lvl-SYS .log-ln,.lvl-SYS .log-ts{color:#2a1a4a}
+.lvl-SYS .log-lvl{color:#8855d0;text-shadow:0 0 8px rgba(136,85,208,.4)}
+.lvl-SYS .log-msg{color:#b085f0}
+.lvl-SYS .log-src{color:#5a2a90}
+.lvl-SYS .log-mod{color:#3a1a6a}
+
+.lvl-DATA .log-ln,.lvl-DATA .log-ts{color:#1a2a1a}
+.lvl-DATA .log-lvl{color:#3a6a3a}
+.lvl-DATA .log-msg{color:#5a9a5a}
+.lvl-DATA .log-src{color:#2a4a2a}
+.lvl-DATA .log-mod{color:#1a3a1a}
+
+.lvl-CRIT .log-ln,.lvl-CRIT .log-ts{color:#4a0a0a}
+.lvl-CRIT .log-lvl{color:#ff2222;text-shadow:0 0 10px rgba(255,34,34,.7);animation:critBlink .5s infinite}
+.lvl-CRIT .log-msg{color:#ff5555;font-weight:700;text-shadow:0 0 6px rgba(255,85,85,.4)}
+.lvl-CRIT .log-src{color:#aa1010}
+.lvl-CRIT .log-mod{color:#7a0808}
+@keyframes critBlink{0%,100%{opacity:1;text-shadow:0 0 10px rgba(255,34,34,.8)}50%{opacity:.5;text-shadow:none}}
+/* Prompt line */
+.con-prompt{
+  padding:8px 14px;
+  border-top:1px solid #0d1a0d;
+  background:#010508;
+  display:flex;align-items:center;gap:8px;
+}
+.prompt-user{color:#2a6a2a;font-size:11px}
+.prompt-host{color:#1a4a4a;font-size:11px}
+.prompt-path{color:#1a4a1a;font-size:11px}
+.prompt-sym{color:#34d399;font-size:11px;margin-right:4px}
+.prompt-inp{
+  background:transparent;border:none;outline:none;
+  color:#34d399;font-family:var(--mono);font-size:11px;
+  flex:1;caret-color:#34d399;
+}
+.cursor-blink{display:inline-block;width:7px;height:13px;background:#34d399;animation:blink .8s infinite;vertical-align:middle;margin-left:1px}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* Data Store */
+.store-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.store-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase}
+.store-table{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.store-row-h{display:grid;grid-template-columns:2fr 1.5fr 1fr 70px;gap:12px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.store-row-d{display:grid;grid-template-columns:2fr 1.5fr 1fr 70px;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;align-items:center;transition:background .2s}
+.store-row-d:hover{background:var(--bg3)}
+.store-row-d:last-child{border-bottom:none}
+.sk{color:var(--blue3);font-family:var(--mono);font-size:10px}
+.sv{color:var(--text);font-family:var(--mono);font-size:11px}
+.sts{color:var(--text3);font-size:10px}
+.src-badge{border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;font-family:var(--mono)}
+.src-edge{background:rgba(13,148,136,.12);color:var(--teal3);border:1px solid rgba(13,148,136,.25)}
+.src-cloud{background:rgba(37,99,235,.12);color:var(--blue3);border:1px solid rgba(37,99,235,.2)}
+
+/* FL Architecture */
+.fl-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px}
+.fl-desc{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:20px}
+.fl-grid{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;margin-bottom:20px}
+.fl-node{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.fl-n-ico{font-size:28px;margin-bottom:8px}
+.fl-n-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.fl-n-sub{font-size:10px;color:var(--text3);margin-bottom:8px}
+.fl-n-badge{display:inline-block;border-radius:20px;font-size:9px;padding:2px 8px;font-weight:700;font-family:var(--mono)}
+.fn-edge .fl-n-badge{background:rgba(13,148,136,.12);color:var(--teal3);border:1px solid rgba(13,148,136,.25)}
+.fn-agg .fl-n-badge{background:rgba(124,58,237,.12);color:var(--purple3);border:1px solid rgba(124,58,237,.2)}
+.fn-cloud .fl-n-badge{background:rgba(37,99,235,.12);color:var(--blue3);border:1px solid rgba(37,99,235,.2)}
+.fl-n-detail{font-size:10px;color:var(--text3);line-height:1.8;margin-top:8px;text-align:left}
+.fl-arr{font-size:20px;color:var(--text3);text-align:center}
+.fl-status{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px}
+.fl-st-title{font-size:10px;font-weight:700;color:var(--teal3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;font-family:var(--mono)}
+.fl-st-lines{font-family:var(--mono);font-size:11px;line-height:2;color:var(--text2)}
+
+/* Alert history */
+.alert-hist-item{background:var(--card);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.ahi-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ahi-ico{font-size:18px}
+.ahi-name{font-size:13px;font-weight:700}
+.ahi-id{font-size:11px;color:var(--text3);margin-top:1px}
+.ahi-ts{font-size:10px;color:var(--text3);margin-left:auto;font-family:var(--mono)}
+.ahi-vitals{display:flex;gap:14px;font-size:11px;color:var(--text2)}
+.ahi-vitals b{color:var(--red3)}
+.ahi-trigger{font-size:10px;color:var(--text3);margin-top:6px}
+.sms-sent{display:inline-flex;align-items:center;gap:4px;background:rgba(34,211,238,.08);color:var(--cyan3);border:1px solid rgba(34,211,238,.18);border-radius:20px;font-size:9px;padding:2px 8px;font-family:var(--mono);margin-top:6px}
+
+/* Section title */
+.sec-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.8px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-3px)}20%,40%,60%,80%{transform:translateX(3px)}}
+@keyframes vcPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 24px 4px rgba(239,68,68,.15)}}
+</style>
+</head>
+<body>
+
+<!-- ══ ROLE SELECT ══ -->
+<div id="s-roles" class="screen active">
+  <div class="hero">
+    <div class="hero-badge">🏥 Federated Learning · Edge-Cloud</div>
+    <h1>MediPulse</h1>
+    <p>Intelligent Hospital Vitals Monitoring System</p>
+  </div>
+  <div class="roles-row">
+    <div class="role-card rc-doc" onclick="selectRole('doctor')">
+      <div class="rc-icon">🩺</div>
+      <div class="rc-title">Doctor</div>
+      <div class="rc-desc">Full vitals access, alert management & patient oversight</div>
+      <div class="rc-2fa">🔐 2FA ENABLED</div>
+    </div>
+    <div class="role-card rc-nur" onclick="selectRole('nurse')">
+      <div class="rc-icon">👩‍⚕️</div>
+      <div class="rc-title">Nurse</div>
+      <div class="rc-desc">Patient monitoring, vital logging & shift reports</div>
+    </div>
+    <div class="role-card rc-pat" onclick="selectRole('patient')">
+      <div class="rc-icon">🧑</div>
+      <div class="rc-title">Patient</div>
+      <div class="rc-desc">View your vitals, reports & doctor messages</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="s-login" class="screen">
+  <div class="lf-wrap">
+    <div class="lf-top">
+      <div class="lf-icon" id="lf-icon">🩺</div>
+      <div class="lf-titles">
+        <h2 id="lf-title">Doctor Login</h2>
+        <p id="lf-sub">Two-factor authentication required</p>
+      </div>
+    </div>
+    <div class="lf-role-row">
+      <span id="lf-role-ico">🩺</span>
+      <span id="lf-role-txt" style="font-size:12px;font-weight:600">Doctor</span>
+    </div>
+    <div class="err-box" id="err-box">⚠ Invalid credentials. Please try again.</div>
+    <div class="ok-box" id="ok-box">✓ OTP sent to +91 63744 15182</div>
+    <div id="step-creds">
+      <div class="inp-g">
+        <label>Hospital ID / Email</label>
+        <input class="inp" id="inp-u" placeholder="doctor@hospital.in" />
+      </div>
+      <div class="inp-g">
+        <label>Password</label>
+        <input class="inp" id="inp-p" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn-main" onclick="doLogin()">Continue →</button>
+    </div>
+    <div id="step-otp" style="display:none">
+      <div class="otp-area">
+        <div class="otp-ico">📲</div>
+        <h3>Verify Identity</h3>
+        <p>Enter the 4-digit OTP sent to<br><b>+91 63744 15182</b></p>
+      </div>
+      <div class="otp-row">
+        <input class="otp-inp" maxlength="1" id="o0" oninput="otpFwd(this,0)" />
+        <input class="otp-inp" maxlength="1" id="o1" oninput="otpFwd(this,1)" />
+        <input class="otp-inp" maxlength="1" id="o2" oninput="otpFwd(this,2)" />
+        <input class="otp-inp" maxlength="1" id="o3" oninput="otpFwd(this,3)" />
+      </div>
+      <div class="otp-hint">Demo: enter any 4 digits to proceed</div>
+      <button class="btn-main" style="margin-top:18px" onclick="doOtp()">Verify & Enter →</button>
+    </div>
+    <button class="btn-sec" onclick="goRoles()">← Back to role selection</button>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="s-dash" class="screen">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="tb-logo-ico">🏥</div>
+      Medi<span>Pulse</span>
+    </div>
+    <div class="sep"></div>
+    <div class="tb-live">
+      <div class="live-dot"></div>
+      <div class="live-txt">LIVE</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tb-fl">FL Model</div>
+    <div class="tb-model">v3.2.1</div>
+    <div class="tb-clock" id="tb-clock">00:00:00</div>
+    <div class="tb-avatar" id="tb-av" style="background:rgba(37,99,235,.15);color:var(--blue3)">Dr</div>
+    <button class="tb-logout" onclick="doLogout()">Sign Out</button>
+  </div>
+  <!-- Body -->
+  <div class="dash-body">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-sec">
+        <div class="sb-lbl">Monitor</div>
+        <div class="nav-i on" id="nav-vitals" onclick="switchTab('vitals',this)"><span class="nav-ico">📊</span>Vitals Monitor</div>
+        <div class="nav-i" id="nav-store" onclick="switchTab('store',this)"><span class="nav-ico">🗄️</span>Data Store</div>
+        <div class="nav-i" id="nav-fl" onclick="switchTab('fl',this)"><span class="nav-ico">🧠</span>FL Architecture</div>
+        <div class="nav-i" id="nav-alerts" onclick="switchTab('alerts',this)"><span class="nav-ico">🔔</span>Alert History</div>
+      </div>
+      <div class="sb-sec" style="flex:1">
+        <div class="sb-lbl">Patients</div>
+        <div id="pat-list"></div>
+      </div>
+      <div class="sb-phone">
+        <div class="sbp-lbl">Alert Number</div>
+        <div class="sbp-num">+91 63744 15182</div>
+        <div class="sbp-sub">SMS · WhatsApp</div>
+      </div>
+    </div>
+    <!-- Panels -->
+    <div class="panel-wrap">
+
+      <!-- Vitals Panel -->
+      <div class="panel active" id="panel-vitals">
+        <div class="alert-banner" id="alert-banner">
+          <div class="ab-ico">🚨</div>
+          <div>
+            <div class="ab-title" id="ab-title">CRITICAL ALERT</div>
+            <div class="ab-sub" id="ab-sub">Alert dispatched to +91 63744 15182</div>
+          </div>
+          <div class="ab-btns">
+            <button class="ab-btn ab-ack" onclick="ackAlert()">✓ Acknowledge</button>
+            <button class="ab-btn ab-sms" onclick="resendSMS()">📱 Resend SMS</button>
+          </div>
+        </div>
+        <div class="pat-hdr">
+          <div class="phr-av" id="phr-av">RK</div>
+          <div>
+            <div class="phr-name" id="phr-name">Rajesh Kumar</div>
+            <div class="phr-sub" id="phr-sub">Ward B · Bed 4 · 54y · Male</div>
+          </div>
+          <div class="phr-badge ok" id="phr-badge">● Stable</div>
+        </div>
+        <div class="vitals-grid" id="vitals-grid"></div>
+        <div class="ecg-card">
+          <div class="ecg-head">
+            <div class="ecg-title">ECG Trace — Real-time</div>
+            <div class="ecg-badge ok" id="ecg-badge">Normal Sinus Rhythm</div>
+          </div>
+          <div class="ecg-bg">
+            <canvas id="ecg" height="80"></canvas>
+          </div>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">Heart Rate Trend <span class="chart-pill">60s</span></div>
+            <canvas id="c-hr" height="90"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">SpO₂ Trend <span class="chart-pill">60s</span></div>
+            <canvas id="c-spo2" height="90"></canvas>
+          </div>
+        </div>
+        <!-- Real Terminal Console -->
+        <div class="console-card">
+          <div class="con-titlebar">
+            <div class="con-dots">
+              <div class="con-dot cd-close"></div>
+              <div class="con-dot cd-min"></div>
+              <div class="con-dot cd-max"></div>
+            </div>
+            <div class="con-title-text">medipulse@hospital-gw — bash — 80×24</div>
+          </div>
+          <div class="con-toolbar">
+            <span class="sim-label">Simulate:</span>
+            <button class="sim-btn sb-normal" onclick="simScenario('normal')">▶ Normal</button>
+            <button class="sim-btn sb-warn" onclick="simScenario('warning')">⚠ Warning</button>
+            <button class="sim-btn sb-fl" onclick="simScenario('fl-round')">🧠 FL Round</button>
+            <button class="sim-btn sb-sms" onclick="simScenario('sms-alert')">📱 SMS Alert</button>
+            <button class="sim-btn sb-clear" onclick="clearConsole()">✕ Clear</button>
+            <div class="sim-auto-wrap">
+              <span class="sim-status" id="sim-status-txt">AUTO: OFF</span>
+              <button class="sim-auto-btn" id="sim-auto-btn" onclick="toggleAutoSim()">⏵ Auto Sim</button>
+            </div>
+          </div>
+          <!-- TRIGGER CRITICAL BUTTON -->
+          <div id="trigger-bar" style="
+            background:linear-gradient(90deg,#0d0404,#120808,#0d0404);
+            border-bottom:1px solid #2a0a0a;
+            padding:8px 14px;
+            display:flex;align-items:center;gap:12px;
+          ">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:#ff2222;box-shadow:0 0 8px #ff2222;animation:critBlink .6s infinite"></div>
+              <span style="font-family:var(--mono);font-size:9px;color:#aa2222;letter-spacing:1.5px;text-transform:uppercase">Demo Trigger</span>
+            </div>
+            <button id="btn-trigger-crit" onclick="triggerCriticalDemo()" style="
+              font-family:var(--mono);font-size:11px;font-weight:700;
+              background:linear-gradient(135deg,rgba(220,38,38,.25),rgba(239,68,68,.15));
+              border:1px solid #ef4444;color:#ff6666;
+              border-radius:6px;padding:6px 18px;cursor:pointer;
+              letter-spacing:.5px;transition:all .2s;
+              box-shadow:0 0 12px rgba(239,68,68,.2),inset 0 1px 0 rgba(255,100,100,.1);
+              text-shadow:0 0 8px rgba(255,100,100,.6);
+            ">
+              🚨 TRIGGER CRITICAL ALERT
+            </button>
+            <div style="font-family:var(--mono);font-size:10px;color:#5a1a1a;flex:1">
+              Forces patient vitals → critical · fires alert · sends SMS to +91 6374415182
+            </div>
+            <div id="sms-compose-wrap" style="display:none">
+              <a id="sms-link" href="#" style="
+                font-family:var(--mono);font-size:10px;font-weight:700;
+                background:rgba(34,211,238,.12);border:1px solid #22d3ee;
+                color:#22d3ee;border-radius:6px;padding:5px 14px;
+                text-decoration:none;transition:all .2s;
+                box-shadow:0 0 8px rgba(34,211,238,.2);
+              ">📱 OPEN SMS APP →</a>
+            </div>
+          </div>
+          <div class="console-body" id="console-body"></div>
+          <div class="con-prompt">
+            <span class="prompt-user">medipulse</span>
+            <span class="prompt-host">@hospital-gw</span>
+            <span class="prompt-path">:~/vitals</span>
+            <span class="prompt-sym">$</span>
+            <input class="prompt-inp" id="con-inp" placeholder="type help or watch live logs..." onkeydown="conCmd(event)" autocomplete="off" spellcheck="false"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Store Panel -->
+      <div class="panel" id="panel-store">
+        <div class="sec-title">Centralized Data Store</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">
+          All vitals are stored in a key-value centralized store. Edge devices write directly; cloud syncs every 5s. Data is encrypted in transit. FL gradients never contain raw patient data.
+        </div>
+        <div class="store-table">
+          <div class="store-row-h">
+            <div>Key</div><div>Value</div><div>Timestamp</div><div>Source</div>
+          </div>
+          <div id="store-rows"></div>
+        </div>
+      </div>
+
+      <!-- FL Panel -->
+      <div class="panel" id="panel-fl">
+        <div class="sec-title">Federated Learning + Edge–Cloud Hybrid</div>
+        <div class="fl-card">
+          <div class="fl-desc">
+            Patient data never leaves the edge device. Local models train on each device, and only encrypted gradient updates are shared with the hospital gateway. The cloud server runs FedAvg to produce a global model, which is broadcast back to all nodes. Zero raw data exposure.
+          </div>
+          <div class="fl-grid">
+            <div class="fl-node fn-edge">
+              <div class="fl-n-ico">📱</div>
+              <div class="fl-n-title">Edge Device</div>
+              <div class="fl-n-sub">IoT / Wearable</div>
+              <div class="fl-n-badge">EDGE</div>
+              <div class="fl-n-detail">
+                • Reads: HR, SpO₂, BP, Temp<br>
+                • Local inference: anomaly detect<br>
+                • Sends: encrypted Δweights<br>
+                • Privacy: data stays on device
+              </div>
+            </div>
+            <div class="fl-arr">→</div>
+            <div class="fl-node fn-agg">
+              <div class="fl-n-ico">🏥</div>
+              <div class="fl-n-title">Hospital Gateway</div>
+              <div class="fl-n-sub">Local Aggregator</div>
+              <div class="fl-n-badge">AGGREGATOR</div>
+              <div class="fl-n-detail">
+                • FedProx aggregation<br>
+                • Threshold alert engine<br>
+                • SMS/WhatsApp dispatch<br>
+                • Local model versioning
+              </div>
+            </div>
+            <div class="fl-arr">⇌</div>
+            <div class="fl-node fn-cloud">
+              <div class="fl-n-ico">☁️</div>
+              <div class="fl-n-title">Cloud Server</div>
+              <div class="fl-n-sub">Global Model Host</div>
+              <div class="fl-n-badge">CLOUD</div>
+              <div class="fl-n-detail">
+                • FedAvg global model<br>
+                • Long-term analytics<br>
+                • Model broadcast<br>
+                • Audit & compliance logs
+              </div>
+            </div>
+          </div>
+          <div class="fl-status">
+            <div class="fl-st-title">FL Round Status</div>
+            <div class="fl-st-lines" id="fl-lines"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert History Panel -->
+      <div class="panel" id="panel-alerts">
+        <div class="sec-title">Alert History & SMS Log</div>
+        <div id="alert-hist-wrap"></div>
+      </div>
+
+    </div><!-- /panel-wrap -->
+  </div>
+</div>
+
+<script>
+// ══════════ DATA ══════════
+const PHONE = '+91 63744 15182';
+let role = 'doctor', selPat = 0, acked = false;
+const alertHist = [];
+
+const PATS = [
+  {id:'P001',name:'Rajesh Kumar',ini:'RK',ward:'B',bed:4,age:54,sex:'M',
+   clr:'rgba(37,99,235,.15)',tc:'var(--blue3)',
+   v:{hr:78,spo2:98,bp:'120/80',temp:37.1},st:'ok'},
+  {id:'P002',name:'Anita Sharma',ini:'AS',ward:'A',bed:2,age:43,sex:'F',
+   clr:'rgba(13,148,136,.15)',tc:'var(--teal3)',
+   v:{hr:94,spo2:95,bp:'132/86',temp:37.9},st:'warn'},
+  {id:'P003',name:'Suresh Patel',ini:'SP',ward:'C',bed:7,age:67,sex:'M',
+   clr:'rgba(124,58,237,.15)',tc:'var(--purple3)',
+   v:{hr:115,spo2:91,bp:'148/96',temp:38.7},st:'crit'},
+];
+
+let hrHist = [], spo2Hist = [];
+let ecgPhase = 0, ecgPts = [];
+const ECG_N = 500;
+
+// ══════════ SCREENS ══════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('active')});
+  const s=document.getElementById(id); s.style.display='flex'; s.classList.add('active');
+}
+
+// ══════════ ROLE SELECT ══════════
+function selectRole(r){
+  role=r;
+  const cfg={
+    doctor:{ico:'🩺',title:'Doctor Login',sub:'2FA · OTP to registered mobile',bg:'rgba(37,99,235,.15)'},
+    nurse:{ico:'👩‍⚕️',title:'Nurse Login',sub:'Enter your credentials',bg:'rgba(13,148,136,.15)'},
+    patient:{ico:'🧑',title:'Patient Login',sub:'Enter your Patient ID',bg:'rgba(124,58,237,.15)'},
+  };
+  const c=cfg[r];
+  document.getElementById('lf-icon').textContent=c.ico;
+  document.getElementById('lf-icon').style.background=c.bg;
+  document.getElementById('lf-title').textContent=c.title;
+  document.getElementById('lf-sub').textContent=c.sub;
+  document.getElementById('lf-role-ico').textContent=c.ico;
+  document.getElementById('lf-role-txt').textContent=r.charAt(0).toUpperCase()+r.slice(1);
+  document.getElementById('step-creds').style.display='';
+  document.getElementById('step-otp').style.display='none';
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('ok-box').style.display='none';
+  document.getElementById('inp-u').value='';
+  document.getElementById('inp-p').value='';
+  show('s-login');
+}
+function goRoles(){show('s-roles');}
+
+function doLogin(){
+  const u=document.getElementById('inp-u').value.trim();
+  const p=document.getElementById('inp-p').value.trim();
+  if(!u||!p){document.getElementById('err-box').style.display='block';return;}
+  document.getElementById('err-box').style.display='none';
+  if(role==='doctor'){
+    document.getElementById('ok-box').style.display='block';
+    document.getElementById('step-creds').style.display='none';
+    document.getElementById('step-otp').style.display='block';
+  } else { launchDash(); }
+}
+
+function otpFwd(el,i){if(el.value.length===1&&i<3)document.getElementById('o'+(i+1)).focus();}
+
+function doOtp(){
+  const code=[0,1,2,3].map(i=>document.getElementById('o'+i).value).join('');
+  if(code.length<4){alert('Enter 4 digits');return;}
+  launchDash();
+}
+
+// ══════════ LAUNCH ══════════
+function launchDash(){
+  const avcfg={doctor:['Dr','rgba(37,99,235,.15)','var(--blue3)'],nurse:['Ns','rgba(13,148,136,.15)','var(--teal3)'],patient:['Pt','rgba(124,58,237,.15)','var(--purple3)']};
+  const av=avcfg[role];
+  document.getElementById('tb-av').textContent=av[0];
+  document.getElementById('tb-av').style.background=av[1];
+  document.getElementById('tb-av').style.color=av[2];
+  buildPatList();
+  pickPat(0);
+  show('s-dash');
+  startClock();
+  initECG();
+  startLive();
+  bootConsole();
+  buildFLLines();
+  log('s','[AUTH] '+role.toUpperCase()+' authenticated · 2FA passed');
+  log('i','[SYSTEM] MediPulse v3.2.1 online · FL model loaded · 3 edge nodes active');
+  log('d','[FL] Round 47 complete · Global accuracy 94.2% · Δloss −0.0042');
+}
+
+function doLogout(){
+  acked=false; alertHist.length=0;
+  show('s-roles');
+}
+
+// ══════════ PATIENT LIST ══════════
+function buildPatList(){
+  const wrap=document.getElementById('pat-list'); wrap.innerHTML='';
+  PATS.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='pat-item'+(i===selPat?' sel':'');
+    d.id='pi-'+i; d.onclick=()=>pickPat(i);
+    d.innerHTML=`<div class="pa-av" style="background:${p.clr};color:${p.tc}">${p.ini}</div>
+    <div><div class="pa-nm">${p.name}</div><div class="pa-id">${p.id}</div></div>
+    <div class="pa-dot ${p.st}"></div>`;
+    wrap.appendChild(d);
+  });
+}
+
+function pickPat(i){
+  selPat=i; acked=false;
+  document.querySelectorAll('.pat-item').forEach((el,j)=>el.classList.toggle('sel',j===i));
+  const p=PATS[i];
+  document.getElementById('phr-av').textContent=p.ini;
+  document.getElementById('phr-av').style.background=p.clr;
+  document.getElementById('phr-av').style.color=p.tc;
+  document.getElementById('phr-name').textContent=p.name;
+  document.getElementById('phr-sub').textContent=`Ward ${p.ward} · Bed ${p.bed} · ${p.age}y · ${p.sex==='M'?'Male':'Female'}`;
+  hrHist=Array(60).fill(0).map(()=>Math.round(p.v.hr-12+Math.random()*24));
+  spo2Hist=Array(60).fill(0).map(()=>Math.round(p.v.spo2-3+Math.random()*5));
+  renderVitals(); updateStore();
+}
+
+// ══════════ VITALS ══════════
+function renderVitals(){
+  const p=PATS[selPat]; const v=p.v;
+  const hrA=v.hr>100||v.hr<50;
+  const spA=v.spo2<95;
+  const bpS=parseInt(v.bp.split('/')[0]);
+  const bpA=bpS>140||bpS<90;
+  const tpA=v.temp>38;
+  // status badge
+  const sb=document.getElementById('phr-badge');
+  if(p.st==='ok'){sb.className='phr-badge ok';sb.textContent='● Stable';}
+  else if(p.st==='warn'){sb.className='phr-badge warn';sb.textContent='⚠ Warning';}
+  else{sb.className='phr-badge crit';sb.textContent='🚨 Critical';}
+  // ECG badge
+  const eb=document.getElementById('ecg-badge');
+  if(p.st==='crit'){eb.className='ecg-badge crit';eb.textContent='⚠ Abnormal Rhythm';}
+  else{eb.className='ecg-badge ok';eb.textContent='Normal Sinus Rhythm';}
+
+  document.getElementById('vitals-grid').innerHTML=`
+  <div class="vc heart ${hrA?'alert':''}">
+    <div class="vc-lbl">Heart Rate</div>
+    <div class="vc-val" style="color:${hrA?'var(--red3)':'var(--pink3)'}">${v.hr}</div>
+    <div class="vc-unit">bpm</div>
+    <div class="vc-range">Normal: 60 – 100 bpm</div>
+    <div class="vc-status" style="color:${hrA?'var(--red3)':'var(--green3)'}">${hrA?'⚠ Out of range':'✓ Normal'}</div>
+    <div class="vc-bar"><div class="vc-fill" style="width:${Math.min(v.hr,160)/1.6}%;background:${hrA?'var(--red2)':'var(--pink2)'}"></div></div>
+  </div>
+  <div class="vc spo2 ${spA?'alert':''}">
+    <div class="vc-lbl">SpO₂</div>
+    <div class="vc-val" style="color:${spA?'var(--red3)':'var(--cyan3)'}">${v.spo2}</div>
+    <div class="vc-unit">%</div>
+    <div class="vc-range">Normal: ≥ 95%</div>
+    <div class="vc-status" style="color:${spA?'var(--red3)':'var(--green3)'}">${spA?'⚠ Hypoxia':'✓ Normal'}</div>
+    <div class="vc-bar"><div class="vc-fill" style="width:${v.spo2}%;background:${spA?'var(--red2)':'var(--cyan2)'}"></div></div>
+  </div>
+  <div class="vc bp ${bpA?'alert':''}">
+    <div class="vc-lbl">Blood Pressure</div>
+    <div class="vc-val" style="font-size:26px;color:${bpA?'var(--red3)':'var(--purple3)'}">${v.bp}</div>
+    <div class="vc-unit">mmHg</div>
+    <div class="vc-range">Normal: 90–120 / 60–80</div>
+    <div class="vc-status" style="color:${bpA?'var(--red3)':'var(--green3)'}">${bpA?'⚠ Abnormal':'✓ Normal'}</div>
+    <div class="vc-bar"><div class="vc-fill" style="width:${Math.min(bpS,180)/1.8}%;background:${bpA?'var(--red2)':'var(--purple2)'}"></div></div>
+  </div>
+  <div class="vc temp ${tpA?'alert':''}">
+    <div class="vc-lbl">Temperature</div>
+    <div class="vc-val" style="color:${tpA?'var(--red3)':'var(--amber3)'}">${v.temp.toFixed(1)}</div>
+    <div class="vc-unit">°C</div>
+    <div class="vc-range">Normal: 36.1 – 37.2 °C</div>
+    <div class="vc-status" style="color:${tpA?'var(--red3)':'var(--green3)'}">${tpA?'⚠ Fever':'✓ Normal'}</div>
+    <div class="vc-bar"><div class="vc-fill" style="width:${((v.temp-35)/5)*100}%;background:${tpA?'var(--red2)':'var(--amber2)'}"></div></div>
+  </div>`;
+
+  // Alert banner
+  const anyAlert=hrA||spA||bpA||tpA;
+  const banner=document.getElementById('alert-banner');
+  if(anyAlert&&!acked){
+    banner.classList.add('show');
+    const p2=PATS[selPat];
+    document.getElementById('ab-title').textContent=`🚨 CRITICAL — ${p2.name} (${p2.id})`;
+    document.getElementById('ab-sub').textContent=`Abnormal vitals. SMS dispatched to ${PHONE}`;
+    if(p.st==='crit') fireAlert(p2,'auto');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function fireAlert(p, trigger){
+  const ts=nowTs();
+  const already=alertHist.find(a=>a.id===p.id&&a.ts===ts);
+  if(already) return;
+  logRich('CRIT','alert.engine','threshold.BREACH',`❗ HR=${p.v.hr}bpm SpO₂=${p.v.spo2}% Temp=${p.v.temp}°C — ${p.name} (${p.id})`);
+  logRich('WARN','notif.svc','sms.dispatch',`Sending SMS → Doctor +91 6374415182`);
+  logRich('WARN','notif.svc','sms.dispatch',`Sending SMS → Patient +91 6374415182`);
+  logRich('WARN','notif.svc','whatsapp.send',`WhatsApp dispatch → +91 6374415182`);
+  logRich('OK','notif.svc','delivery.confirm',`✓ SMS delivered · MsgSID:SM${Math.random().toString(36).slice(2,8).toUpperCase()} · ${ts}`);
+  alertHist.unshift({ts,id:p.id,name:p.name,hr:p.v.hr,spo2:p.v.spo2,bp:p.v.bp,temp:p.v.temp,trigger});
+  buildPatList();
+}
+
+// ══ TRIGGER CRITICAL DEMO ══
+function triggerCriticalDemo(){
+  const btn = document.getElementById('btn-trigger-crit');
+  btn.disabled = true;
+  btn.textContent = '⏳ TRIGGERING...';
+  btn.style.opacity = '.7';
+
+  const p = PATS[selPat];
+  acked = false;
+
+  // Step 1 — escalate vitals to critical
+  logRich('SYS','demo','simulation','━━━━━━━━ DEMO CRITICAL TRIGGER INITIATED ━━━━━━━━');
+  logRich('DATA','edge-node-'+p.id,'vitals.inject',`Injecting critical vitals for ${p.name} (${p.id})`);
+
+  setTimeout(()=>{
+    p.v.hr  = 128;
+    p.v.spo2 = 88;
+    p.v.bp  = '158/102';
+    p.v.temp = 39.4;
+    p.st    = 'crit';
+    hrHist  = hrHist.map((_,i)=> i < 45 ? 70 + Math.round(Math.random()*15) : 100 + Math.round((i-45)*1.2 + Math.random()*5));
+    spo2Hist= spo2Hist.map((_,i)=> i < 45 ? 97 + Math.round(Math.random()*2) : Math.max(88, 97 - Math.round((i-45)*.2)));
+    renderVitals();
+    drawChart('c-hr',hrHist,'#ec4899',40,160);
+    drawChart('c-spo2',spo2Hist,'#22d3ee',85,100);
+    buildPatList();
+    logRich('CRIT','vitals.mon','spike.DETECTED',`HR spiked to ${p.v.hr}bpm ↑↑ SpO₂ dropped to ${p.v.spo2}% ↓↓`);
+    logRich('CRIT','fl.engine','anomaly.ALERT',`Anomaly score: 0.97 (threshold 0.75) — CRITICAL EXCEEDED`);
+    logRich('ERROR','vitals.mon','spo2.ALARM',`SpO₂=${p.v.spo2}% — Severe Hypoxia — IMMEDIATE ACTION`);
+  }, 400);
+
+  // Step 2 — fire alert + console sequence
+  setTimeout(()=>{
+    logRich('CRIT','alert.engine','trigger.FIRE',`🚨 ALERT FIRED — ${p.name} (${p.id}) — Ward ${p.ward} Bed ${p.bed}`);
+    logRich('WARN','notif.svc','sms.prepare',`Building SMS payload for +91 6374415182`);
+    logRich('DATA','notif.svc','sms.payload',`Patient:${p.name} HR:${p.v.hr}bpm SpO₂:${p.v.spo2}% BP:${p.v.bp} Temp:${p.v.temp}°C STATUS:CRITICAL`);
+    logRich('WARN','notif.svc','sms.route',`Route: SMS API → IN carrier → +91 6374415182`);
+  }, 900);
+
+  setTimeout(()=>{
+    logRich('OK','notif.svc','sms.SENT',`✓ SMS to Doctor +91 6374415182 — delivered`);
+    logRich('OK','notif.svc','sms.SENT',`✓ SMS to Patient +91 6374415182 — delivered`);
+    logRich('OK','notif.svc','whatsapp.SENT',`✓ WhatsApp to +91 6374415182 — confirmed`);
+    logRich('SYS','gateway','escalation',`On-call physician paged · Nurse station alerted`);
+    logRich('SYS','demo','simulation','━━━━━━━━ MANUAL SMS LINK READY ━━━━━━━━');
+
+    // Build and show SMS link
+    const msg = encodeURIComponent(
+      `🚨 MEDIPULSE CRITICAL ALERT\n\nPatient: ${p.name} (${p.id})\nWard ${p.ward} · Bed ${p.bed}\n\n⚠ VITALS:\n• Heart Rate: ${p.v.hr} bpm (CRITICAL)\n• SpO₂: ${p.v.spo2}% (HYPOXIA)\n• BP: ${p.v.bp} mmHg\n• Temp: ${p.v.temp}°C\n\nIMMEDIATE ATTENTION REQUIRED\n— MediPulse Hospital System`
+    );
+    const smsHref = `sms:+916374415182?body=${msg}`;
+    const link = document.getElementById('sms-link');
+    link.href = smsHref;
+    document.getElementById('sms-compose-wrap').style.display = 'block';
+
+    // Also fire alert history entry
+    alertHist.unshift({
+      ts:nowTs(), id:p.id, name:p.name,
+      hr:p.v.hr, spo2:p.v.spo2, bp:p.v.bp, temp:p.v.temp,
+      trigger:'Manual demo trigger'
+    });
+
+    logRich('INFO','notif.svc','manual.sms',`Click [OPEN SMS APP →] to send manual SMS to +91 6374415182`);
+
+    btn.disabled = false;
+    btn.textContent = '🚨 TRIGGER CRITICAL ALERT';
+    btn.style.opacity = '1';
+  }, 1800);
+}
+
+function ackAlert(){
+  acked=true;
+  document.getElementById('alert-banner').classList.remove('show');
+  log('o',`[ACK] Alert acknowledged by ${role.toUpperCase()} · ${nowTs()}`);
+}
+
+function resendSMS(){
+  const p=PATS[selPat];
+  log('w',`[SMS] Resent to ${PHONE} — ${p.name} · ${nowTs()}`);
+  log('w',`[WHATSAPP] Resent to ${PHONE}`);
+  fireAlert(p,'manual-resend');
+}
+
+// ══════════ ECG ══════════
+function initECG(){
+  const c=document.getElementById('ecg');
+  c.width=c.parentElement.clientWidth-16;
+  ecgPts=Array(ECG_N).fill(40);
+  animECG();
+}
+
+function ecgVal(x){
+  const period=80, t=(x%period)/period;
+  if(t<0.05) return 40;
+  if(t<0.10) return 40+t*200;
+  if(t<0.13) return 40+(0.13-t)*500;
+  if(t<0.18) return 40-(0.18-t)*600;
+  if(t<0.25) return 40+(0.25-t)*800;
+  if(t<0.30) return 40;
+  return 40+Math.sin(t*6.28)*2;
+}
+
+function animECG(){
+  const c=document.getElementById('ecg'); if(!c) return;
+  const ctx=c.getContext('2d'); const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  // Grid
+  ctx.strokeStyle='rgba(34,211,238,.06)'; ctx.lineWidth=.5;
+  for(let x=0;x<w;x+=25){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Wave
+  const crit=PATS[selPat].st==='crit';
+  ctx.strokeStyle=crit?'#f87171':'#34d399';
+  ctx.lineWidth=1.5; ctx.shadowBlur=crit?10:5; ctx.shadowColor=ctx.strokeStyle;
+  ctx.beginPath();
+  ecgPts.forEach((v,i)=>i===0?ctx.moveTo(0,v):ctx.lineTo(i*(w/ECG_N),v));
+  ctx.stroke(); ctx.shadowBlur=0;
+  ecgPhase++;
+  ecgPts.shift();
+  ecgPts.push(ecgVal(ecgPhase*(crit?1.5:1)));
+  requestAnimationFrame(animECG);
+}
+
+// ══════════ TREND CHARTS ══════════
+function drawChart(id,data,col,min,max){
+  const c=document.getElementById(id); if(!c) return;
+  c.width=c.parentElement.clientWidth-32; const h=c.height;
+  const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,h);
+  const pts=data.slice(-50); const step=c.width/(pts.length-1); const range=max-min;
+  ctx.beginPath(); ctx.moveTo(0,h);
+  pts.forEach((v,i)=>ctx.lineTo(i*step,h-((v-min)/range)*(h-12)-6));
+  ctx.lineTo((pts.length-1)*step,h); ctx.closePath();
+  ctx.fillStyle=col+'18'; ctx.fill();
+  ctx.beginPath();
+  pts.forEach((v,i)=>i===0?ctx.moveTo(0,h-((v-min)/range)*(h-12)-6):ctx.lineTo(i*step,h-((v-min)/range)*(h-12)-6));
+  ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.stroke();
+  const lv=pts[pts.length-1];
+  ctx.beginPath(); ctx.arc((pts.length-1)*step,h-((lv-min)/range)*(h-12)-6,3,0,6.28);
+  ctx.fillStyle=col; ctx.fill();
+}
+
+// ══════════ LIVE UPDATES ══════════
+function startLive(){
+  setInterval(()=>{
+    const p=PATS[selPat];
+    p.v.hr=clamp(Math.round(p.v.hr+(Math.random()-.47)*3),40,140);
+    p.v.spo2=clamp(Math.round((p.v.spo2+(Math.random()-.48)*.6)*10)/10,88,100);
+    p.v.temp=clamp(Math.round((p.v.temp+(Math.random()-.49)*.12)*10)/10,35,40);
+    hrHist.push(p.v.hr); hrHist.shift();
+    spo2Hist.push(p.v.spo2); spo2Hist.shift();
+    const bad=p.v.hr>100||p.v.spo2<95||p.v.temp>38;
+    const vcrit=p.v.hr>115||p.v.spo2<92;
+    p.st=bad?(vcrit?'crit':'warn'):'ok';
+    if(!bad) acked=false;
+    if(document.getElementById('panel-vitals').classList.contains('active')){
+      renderVitals();
+      drawChart('c-hr',hrHist,'#ec4899',40,160);
+      drawChart('c-spo2',spo2Hist,'#22d3ee',85,100);
+    }
+    updateStore();
+    buildPatList();
+    if(p.st==='crit'&&!acked&&Math.random()<.08) fireAlert(p,'auto-fl');
+  },1600);
+}
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+// ══════════ REAL TERMINAL CONSOLE ══════════
+let lineNum = 1;
+let autoSimTimer = null;
+let autoSimRunning = false;
+const cmdHistory = [];
+let cmdHidx = -1;
+
+const SCENARIOS = {
+  normal:[
+    ['DATA','edge-node-P001','vitals.stream','HR=76bpm SpO₂=98% BP=118/78 Temp=36.9°C — within normal bounds'],
+    ['INFO','fl.engine','model.inference','Local anomaly score: 0.03 (threshold: 0.75) — PASS'],
+    ['OK'  ,'gateway','cloud.sync','Records flushed to central store · 4 writes · latency 8ms'],
+    ['DATA','edge-node-P002','vitals.stream','HR=88bpm SpO₂=97% BP=126/82 Temp=37.2°C — stable'],
+    ['INFO','scheduler','fl.round','Gradient collection: 3/3 nodes · FedAvg aggregating...'],
+    ['OK'  ,'fl.engine','model.update','Round 49 complete · Δloss=−0.0031 · accuracy=94.8%'],
+    ['SYS' ,'heartbeat','monitor.loop','All sensors nominal · uptime 14h 22m · mem 42%'],
+  ],
+  warning:[
+    ['WARN','edge-node-P002','threshold.chk','HR=96bpm — approaching upper limit (100bpm)'],
+    ['INFO','fl.engine','anomaly.det','Anomaly score: 0.61 — elevated, monitoring...'],
+    ['WARN','vitals.mon','bp.check','BP=135/88 — Stage 1 Hypertension range detected'],
+    ['WARN','gateway','alert.engine','Pre-alert condition: P002 Anita Sharma · 2 flags raised'],
+    ['INFO','notif.svc','sms.queue','Alert queued for dispatch if condition persists >30s'],
+    ['WARN','edge-node-P002','spo2.trend','SpO₂ trending down: 97→96→95% over 45s'],
+    ['DATA','fl.engine','inference','Running real-time inference on P002 vitals stream...'],
+  ],
+  critical:[
+    ['CRIT','edge-node-P003','threshold.BREACH','❗ HR=118bpm — CRITICAL (limit: 100bpm)'],
+    ['CRIT','fl.engine','anomaly.ALERT','Anomaly score: 0.94 — CRITICAL threshold exceeded'],
+    ['ERROR','vitals.mon','spo2.ALARM','SpO₂=91% — Severe Hypoxia — immediate action required'],
+    ['CRIT','alert.engine','trigger.FIRE','🚨 ALERT TRIGGERED — Patient: Suresh Patel (P003)'],
+    ['WARN','notif.svc','sms.dispatch','Sending SMS → Doctor: +91 63744 15182'],
+    ['WARN','notif.svc','whatsapp.send','Dispatching WhatsApp → Patient: +91 63744 15182'],
+    ['OK'  ,'notif.svc','delivery.confirm','✓ SMS delivered (0.8s) · WhatsApp delivered (1.1s)'],
+    ['CRIT','gateway','escalation','Escalating to on-call physician · paging ward nurse'],
+  ],
+  'fl-round':[
+    ['SYS' ,'fl.coordinator','round.START','Initiating FL training round 50 · collecting gradients'],
+    ['INFO','edge-node-P001','gradient.upload','Δweights: 2.1KB · encrypted AES-256 · uploaded'],
+    ['INFO','edge-node-P002','gradient.upload','Δweights: 1.8KB · encrypted AES-256 · uploaded'],
+    ['INFO','edge-node-P003','gradient.upload','Δweights: 2.4KB · encrypted AES-256 · uploaded'],
+    ['SYS' ,'fl.engine','fedavg.RUN','FedAvg: weighting by dataset size [0.34, 0.31, 0.35]'],
+    ['DATA','fl.engine','convergence','Loss: 0.0821→0.0783 · Val-acc: 93.9%→94.6%'],
+    ['OK'  ,'fl.coordinator','broadcast','Global model v3.2.2 broadcast → 3/3 nodes · 11ms'],
+    ['SYS' ,'fl.coordinator','round.DONE','Round 50 complete · privacy budget ε=0.42 used'],
+  ],
+  'sms-alert':[
+    ['INFO','notif.svc','sms.prepare','Building alert payload for +91 63744 15182'],
+    ['DATA','notif.svc','sms.payload','Patient: Suresh Patel · HR:118 · SpO₂:91% · CRITICAL'],
+    ['INFO','notif.svc','sms.route','Route: Twilio API → IN-MH carrier → +91 63744 15182'],
+    ['OK'  ,'notif.svc','sms.SENT','✓ SMS delivered · MsgSID: SM8a2f3c · 0.7s'],
+    ['INFO','notif.svc','whatsapp.prepare','Building WhatsApp message via Business API'],
+    ['OK'  ,'notif.svc','whatsapp.SENT','✓ WhatsApp delivered · receipt confirmed · 1.2s'],
+    ['INFO','notif.svc','doctor.notify','Doctor alert: "P003 critical — HR 118bpm"'],
+    ['OK'  ,'notif.svc','patient.notify','Patient alert: "Your vitals need attention"'],
+  ],
+};
+
+function log(type, msg){
+  const wrap = document.getElementById('console-body');
+  if(!wrap) return;
+  const typeMap = {
+    i:'INFO', w:'WARN', e:'ERROR', s:'SYS', o:'OK', d:'DATA',
+    INFO:'INFO', WARN:'WARN', ERROR:'ERROR', SYS:'SYS', OK:'OK', DATA:'DATA', CRIT:'CRIT'
+  };
+  const lvl = typeMap[type] || 'DATA';
+  // parse rich format: log(type, msg) or log(lvl, source, module, msg)
+  let source='system', mod='core', text=msg;
+  const d = document.createElement('div');
+  d.className = `log-line lvl-${lvl}`;
+  const n = String(lineNum++).padStart(4,'0');
+  const now = new Date();
+  const ts = now.toTimeString().split(' ')[0]+'.'+String(now.getMilliseconds()).padStart(3,'0');
+  d.innerHTML =
+    `<span class="log-ln">${n}</span>`+
+    `<span class="log-ts">${ts}</span>`+
+    `<span class="log-lvl">[${lvl.padEnd(5,' ')}]</span>`+
+    `<span class="log-msg">${text}</span>`;
+  wrap.appendChild(d);
+  wrap.scrollTop = wrap.scrollHeight;
+  while(wrap.children.length > 200) wrap.removeChild(wrap.firstChild);
+}
+
+function logRich(lvl, source, mod, text){
+  const wrap = document.getElementById('console-body');
+  if(!wrap) return;
+  const d = document.createElement('div');
+  d.className = `log-line lvl-${lvl}`;
+  const n = String(lineNum++).padStart(4,'0');
+  const now = new Date();
+  const ts = now.toTimeString().split(' ')[0]+'.'+String(now.getMilliseconds()).padStart(3,'0');
+  d.innerHTML =
+    `<span class="log-ln">${n}</span>`+
+    `<span class="log-ts">${ts}</span>`+
+    `<span class="log-lvl">[${lvl.padEnd(5,' ')}]</span>`+
+    `<span class="log-src" style="margin-right:6px">${source}</span>`+
+    `<span class="log-mod" style="margin-right:6px">${mod}:</span>`+
+    `<span class="log-msg">${text}</span>`;
+  wrap.appendChild(d);
+  wrap.scrollTop = wrap.scrollHeight;
+  while(wrap.children.length > 300) wrap.removeChild(wrap.firstChild);
+}
+
+function simScenario(name){
+  const steps = SCENARIOS[name];
+  if(!steps) return;
+  steps.forEach((s,i)=>{
+    setTimeout(()=>logRich(s[0],s[1],s[2],s[3]), i*220);
+  });
+}
+
+function clearConsole(){
+  const w=document.getElementById('console-body');
+  if(w) w.innerHTML='';
+  lineNum=1;
+  logRich('SYS','console','init','Terminal cleared · MediPulse v3.2.1 ready');
+}
+
+function toggleAutoSim(){
+  const btn=document.getElementById('sim-auto-btn');
+  const st=document.getElementById('sim-status-txt');
+  if(autoSimRunning){
+    clearInterval(autoSimTimer); autoSimTimer=null; autoSimRunning=false;
+    btn.textContent='⏵ Auto Sim'; btn.classList.remove('running');
+    st.textContent='AUTO: OFF'; st.classList.remove('on');
+    logRich('SYS','console','autosim','Auto-simulation stopped');
+  } else {
+    autoSimRunning=true;
+    btn.textContent='⏹ Stop'; btn.classList.add('running');
+    st.textContent='◉ LIVE SIM'; st.classList.add('on');
+    logRich('SYS','console','autosim','━━━ AUTO-SIMULATION STARTED · cycling all scenarios ━━━');
+    const seq=['normal','fl-round','warning','critical','sms-alert'];
+    const labels=['Normal Flow','FL Round','Warning State','Critical Alert','SMS Dispatch'];
+    let si=0;
+    const runNext=()=>{
+      logRich('SYS','autosim','scenario','━━━ Scenario: '+labels[si%seq.length]+' ━━━');
+      simScenario(seq[si%seq.length]); si++;
+    };
+    runNext();
+    autoSimTimer=setInterval(runNext,3200);
+  }
+}
+
+function bootConsole(){
+  const boot=[
+    ['SYS','kernel','boot','MediPulse OS 3.2.1 · Linux hospital-gw 5.15.0 · x86_64'],
+    ['SYS','init','services','Starting: vitals-monitor, fl-engine, alert-svc, sms-relay'],
+    ['OK' ,'init','vitals-monitor','Service started · port 8080 · 3 edge nodes discovered'],
+    ['OK' ,'fl.engine','model.load','Model fl-v3.2.1.bin loaded · 2.4MB · CUDA: disabled'],
+    ['INFO','edge','discovery','Node P001 [Rajesh Kumar] · sensor: HR+SpO₂+BP+Temp · OK'],
+    ['INFO','edge','discovery','Node P002 [Anita Sharma] · sensor: HR+SpO₂+BP+Temp · OK'],
+    ['WARN','edge','discovery','Node P003 [Suresh Patel] · anomaly flag on connect'],
+    ['CRIT','vitals.mon','threshold.BREACH','❗ P003 HR=115bpm · SpO₂=91% · CRITICAL'],
+    ['WARN','notif.svc','sms.dispatch','Sending alert → +91 63744 15182'],
+    ['OK'  ,'notif.svc','delivery.confirm','✓ Delivered · 0.9s · MsgSID:SM7f3a21'],
+  ];
+  boot.forEach((m,i)=>setTimeout(()=>logRich(m[0],m[1],m[2],m[3]), i*380));
+  // periodic live stream
+  const live=[
+    ['DATA','vitals.stream','P001','HR=78bpm SpO₂=98% BP=120/80 Temp=37.1°C'],
+    ['DATA','vitals.stream','P002','HR=94bpm SpO₂=95% BP=132/86 Temp=37.9°C'],
+    ['DATA','vitals.stream','P003','HR=115bpm SpO₂=91% BP=148/96 Temp=38.7°C'],
+    ['INFO','fl.engine','inference','Batch inference done · 3 patients · 12ms'],
+    ['DATA','fl.engine','gradient','P001 Δw=1.9KB P002 Δw=1.7KB P003 Δw=2.3KB'],
+    ['OK'  ,'gateway','cloud.sync','Cloud store synced · 12 records · ETag:a3f8c2'],
+    ['SYS' ,'scheduler','heartbeat','System OK · CPU:18% · Mem:44% · Net:↑2.1KB/s ↓0.4KB/s'],
+  ];
+  let li=0;
+  setInterval(()=>{const m=live[li%live.length]; logRich(m[0],m[1],m[2],m[3]); li++;}, 2800);
+}
+
+// ══ CONSOLE INPUT ══
+function conCmd(e){
+  if(e.key==='Enter'){
+    const inp=document.getElementById('con-inp');
+    const cmd=inp.value.trim(); inp.value='';
+    if(!cmd) return;
+    cmdHistory.unshift(cmd); cmdHidx=-1;
+    logRich('SYS','user','input','$ '+cmd);
+    execCmd(cmd);
+  } else if(e.key==='ArrowUp'){
+    cmdHidx=Math.min(cmdHidx+1,cmdHistory.length-1);
+    document.getElementById('con-inp').value=cmdHistory[cmdHidx]||'';
+  } else if(e.key==='ArrowDown'){
+    cmdHidx=Math.max(cmdHidx-1,-1);
+    document.getElementById('con-inp').value=cmdHidx>=0?cmdHistory[cmdHidx]:'';
+  }
+}
+
+function execCmd(cmd){
+  const c=cmd.toLowerCase().trim();
+  if(c==='help'){
+    ['Available commands:',
+     '  status       — show system status',
+     '  patients     — list all patients',
+     '  vitals       — current vitals snapshot',
+     '  alert test   — fire a test alert',
+     '  sim normal   — run normal scenario',
+     '  sim warning  — run warning scenario',
+     '  sim critical — run critical scenario',
+     '  sim fl       — run FL round scenario',
+     '  sim sms      — run SMS alert scenario',
+     '  autosim      — toggle auto simulation',
+     '  clear        — clear terminal',
+    ].forEach(l=>logRich('INFO','help','docs',l));
+  } else if(c==='status'){
+    logRich('OK','system','status','Uptime: 14h22m · Patients: 3 · Alerts today: 4 · FL round: 49');
+    logRich('OK','system','status','Edge nodes: 3/3 online · Cloud sync: OK · SMS relay: OK');
+  } else if(c==='patients'){
+    PATS.forEach(p=>logRich('DATA','db','patients',`${p.id} ${p.name.padEnd(16)} Ward:${p.ward} Bed:${p.bed} Status:${p.st.toUpperCase()}`));
+  } else if(c==='vitals'){
+    const p=PATS[selPat];
+    logRich('DATA','vitals','snapshot',`${p.id} ${p.name} — HR:${p.v.hr}bpm SpO₂:${p.v.spo2}% BP:${p.v.bp} Temp:${p.v.temp}°C`);
+  } else if(c==='alert test'){
+    simScenario('sms-alert');
+  } else if(c==='sim normal'){simScenario('normal');}
+  else if(c==='sim warning'){simScenario('warning');}
+  else if(c==='sim critical'){simScenario('critical');}
+  else if(c==='sim fl'){simScenario('fl-round');}
+  else if(c==='sim sms'){simScenario('sms-alert');}
+  else if(c==='autosim'){toggleAutoSim();}
+  else if(c==='clear'){clearConsole();}
+  else{ logRich('ERROR','shell','cmd',`command not found: ${cmd} · type "help" for commands`); }
+}
+
+// ══════════ DATA STORE ══════════
+function updateStore(){
+  const p=PATS[selPat]; const ts=nowTs();
+  const rows=[
+    {k:`vitals:${p.id}:hr`,v:`${p.v.hr} bpm`,ts,src:'edge'},
+    {k:`vitals:${p.id}:spo2`,v:`${p.v.spo2}%`,ts,src:'edge'},
+    {k:`vitals:${p.id}:bp`,v:`${p.v.bp} mmHg`,ts,src:'edge'},
+    {k:`vitals:${p.id}:temp`,v:`${p.v.temp}°C`,ts,src:'edge'},
+    {k:`patient:${p.id}:status`,v:p.st.toUpperCase(),ts,src:'edge'},
+    {k:`fl:model:version`,v:'v3.2.1',ts:'2026-04-29',src:'cloud'},
+    {k:`fl:round:current`,v:'Round 48',ts:'09:14:22',src:'cloud'},
+    {k:`alert:phone`,v:PHONE,ts:'2026-04-29',src:'cloud'},
+  ];
+  const wrap=document.getElementById('store-rows'); if(!wrap) return;
+  wrap.innerHTML=rows.map(r=>`
+  <div class="store-row-d">
+    <div class="sk">${r.k}</div>
+    <div class="sv">${r.v}</div>
+    <div class="sts">${r.ts}</div>
+    <div><span class="src-badge src-${r.src}">${r.src}</span></div>
+  </div>`).join('');
+}
+
+// ══════════ FL LINES ══════════
+function buildFLLines(){
+  const wrap=document.getElementById('fl-lines'); if(!wrap) return;
+  const update=()=>{
+    wrap.innerHTML=[
+      `<span style="color:#34d399">●</span> Edge P001 · sync ${nowTs()} · grad ${(1.8+Math.random()*.5).toFixed(1)}KB · status OK`,
+      `<span style="color:#34d399">●</span> Edge P002 · sync ${nowTs()} · grad ${(1.7+Math.random()*.4).toFixed(1)}KB · status OK`,
+      `<span style="color:#f87171">●</span> Edge P003 · sync ${nowTs()} · grad ${(2.2+Math.random()*.4).toFixed(1)}KB · ANOMALY`,
+      `<span style="color:#60a5fa">●</span> Cloud FedAvg round ${47+Math.floor(Math.random()*3)} · accuracy ${(93.5+Math.random()*2).toFixed(1)}%`,
+      `<span style="color:#a78bfa">●</span> Model broadcast → 3/3 nodes · latency ${Math.round(8+Math.random()*9)}ms`,
+    ].join('<br>');
+  };
+  update(); setInterval(update,3000);
+}
+
+// ══════════ ALERT HISTORY ══════════
+function renderAlertHist(){
+  const wrap=document.getElementById('alert-hist-wrap'); if(!wrap) return;
+  if(!alertHist.length){
+    wrap.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px;text-align:center">No alerts triggered yet in this session.</div>';
+    return;
+  }
+  wrap.innerHTML=alertHist.map(a=>`
+  <div class="alert-hist-item">
+    <div class="ahi-row">
+      <div class="ahi-ico">🚨</div>
+      <div><div class="ahi-name">${a.name}</div><div class="ahi-id">${a.id}</div></div>
+      <div class="ahi-ts">${a.ts}</div>
+    </div>
+    <div class="ahi-vitals">
+      <span>HR: <b>${a.hr} bpm</b></span>
+      <span>SpO₂: <b>${a.spo2}%</b></span>
+      <span>BP: ${a.bp}</span>
+      <span>Temp: ${a.temp}°C</span>
+    </div>
+    <div class="sms-sent">📱 SMS → ${PHONE}</div>
+    <div class="ahi-trigger">Trigger: ${a.trigger}</div>
+  </div>`).join('');
+}
+
+// ══════════ TABS ══════════
+function switchTab(name, el){
+  document.querySelectorAll('.nav-i').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  ['vitals','store','fl','alerts'].forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===name));
+  if(name==='alerts') renderAlertHist();
+  if(name==='store') updateStore();
+}
+
+// ══════════ CLOCK ══════════
+function startClock(){
+  const tick=()=>document.getElementById('tb-clock').textContent=new Date().toLocaleTimeString();
+  tick(); setInterval(tick,1000);
+}
+
+function nowTs(){return new Date().toLocaleTimeString();}
+</script>
+</body>
+</html>
