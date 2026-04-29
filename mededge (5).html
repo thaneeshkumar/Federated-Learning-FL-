@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0b0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>MedEdge — Clinical Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* ══ RESET ══════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--sur:#111827;--sur2:#161e2e;
+  --bdr:rgba(99,178,255,.11);--bdr2:rgba(99,178,255,.24);
+  --blue:#3B8BD4;--blt:#85B7EB;--bdk:#185FA5;
+  --teal:#1D9E75;--tlt:#5DCAA5;
+  --amb:#EF9F27;--alt:#FAC775;
+  --pur:#7F77DD;--plt:#AFA9EC;
+  --red:#E24B4A;--rlt:#F09595;
+  --tx:#e8ecf4;--tx2:#9aa3b5;--tx3:#4e5a70;
+  --mono:'IBM Plex Mono',monospace;--sans:'DM Sans',sans-serif;
+  --r:10px;--rsm:8px;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100dvh;overflow-x:hidden}
+
+/* ══ ANIMATIONS ═════════════════════════════════════════════ */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes pulse   {0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+@keyframes spin    {to{transform:rotate(360deg)}}
+@keyframes ain     {from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastIn {from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes chkPop  {from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes gridMv  {0%{background-position:0 0,0 0}100%{background-position:40px 40px,40px 40px}}
+@keyframes ring    {0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.12;transform:scale(1.09)}}
+
+/* ══ SCREENS ════════════════════════════════════════════════ */
+.screen{display:none}.screen.active{display:block}
+
+/* ══════════════════════════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════════════════════════ */
+#LS{min-height:100dvh;position:relative;overflow:hidden}
+.bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(59,139,212,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(59,139,212,.035) 1px,transparent 1px);
+  background-size:40px 40px;animation:gridMv 22s linear infinite}
+.blob{position:fixed;z-index:0;border-radius:50%;filter:blur(90px);opacity:.065;pointer-events:none}
+.b1{width:500px;height:500px;background:#3B8BD4;top:-120px;left:-120px}
+.b2{width:420px;height:420px;background:#1D9E75;bottom:-80px;right:-80px}
+.b3{width:300px;height:300px;background:#7F77DD;top:50%;left:50%;transform:translate(-50%,-50%)}
+
+.lw{position:relative;z-index:1;display:grid;grid-template-columns:1fr 470px;min-height:100dvh}
+
+/* Left panel */
+.lp{display:flex;flex-direction:column;justify-content:space-between;
+  padding:clamp(32px,5vw,60px) clamp(32px,5vw,56px);
+  border-right:.5px solid var(--bdr);animation:fadeUp .7s ease both}
+.brand-lock{display:flex;align-items:center;gap:14px}
+.brand-icon{width:44px;height:44px;border-radius:11px;flex-shrink:0;
+  background:rgba(59,139,212,.12);border:.5px solid rgba(59,139,212,.3);
+  display:flex;align-items:center;justify-content:center;position:relative}
+.brand-ring{position:absolute;inset:-5px;border-radius:16px;
+  border:1px solid rgba(59,139,212,.26);animation:ring 3s ease-in-out infinite}
+.brand-nm{font-size:20px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.brand-sb{font-size:11px;color:var(--tx2);font-family:var(--mono);letter-spacing:.03em;margin-top:2px}
+.lp-main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:48px 0 32px}
+.headline{font-size:clamp(28px,3.2vw,42px);font-weight:300;line-height:1.2;letter-spacing:-.02em;margin-bottom:18px}
+.headline strong{font-weight:600;color:var(--blt)}
+.tagline{font-size:14px;color:var(--tx2);line-height:1.65;max-width:400px;margin-bottom:38px}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:450px}
+.fc{background:rgba(255,255,255,.025);border:.5px solid var(--bdr);border-radius:var(--rsm);padding:15px;transition:border-color .2s,background .2s}
+.fc:hover{border-color:var(--bdr2);background:rgba(255,255,255,.04)}
+.fi{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+.ft{font-size:12px;font-weight:500;margin-bottom:3px}
+.fd{font-size:11px;color:var(--tx2);line-height:1.5}
+.lp-foot{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pill{font-size:10px;font-family:var(--mono);font-weight:500;padding:4px 11px;border-radius:20px;letter-spacing:.04em}
+.p-fl  {background:rgba(127,119,221,.12);color:var(--plt);border:.5px solid rgba(127,119,221,.25)}
+.p-edge{background:rgba(29,158,117,.1); color:var(--tlt);border:.5px solid rgba(29,158,117,.22)}
+.p-cl  {background:rgba(59,139,212,.1); color:var(--blt);border:.5px solid rgba(59,139,212,.22)}
+.p-hip {background:rgba(239,159,39,.08);color:var(--alt);border:.5px solid rgba(239,159,39,.2)}
+.live-p{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--teal);font-family:var(--mono);margin-left:auto}
+.ld{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 1s ease-in-out infinite}
+
+/* Right panel */
+.rp{background:var(--sur);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(28px,4vw,48px) clamp(28px,5vw,50px);border-left:.5px solid var(--bdr);
+  animation:fadeUp .7s .14s ease both}
+.lc{width:100%;max-width:370px}
+.lc-ti{font-size:22px;font-weight:500;margin-bottom:5px}
+.lc-sb{font-size:12px;color:var(--tx2);font-family:var(--mono);margin-bottom:26px}
+
+/* Role grid */
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.rb{padding:10px 8px;border-radius:var(--rsm);border:.5px solid var(--bdr);background:rgba(255,255,255,.02);
+  cursor:pointer;text-align:center;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.rb:hover{background:rgba(255,255,255,.05);border-color:var(--bdr2)}
+.rb.active{background:rgba(59,139,212,.1);border-color:rgba(59,139,212,.4)}
+.ri{width:30px;height:30px;border-radius:50%;margin:0 auto 7px;display:flex;align-items:center;justify-content:center}
+.rl{font-size:12px;font-weight:500}
+.rd{font-size:10px;color:var(--tx2);font-family:var(--mono)}
+
+/* Demo hint */
+.dh{background:rgba(59,139,212,.06);border:.5px solid rgba(59,139,212,.18);border-radius:var(--rsm);
+  padding:9px 13px;font-size:11px;color:var(--tx2);font-family:var(--mono);margin-bottom:15px;line-height:1.65}
+.dh strong{color:var(--blt)}
+
+/* Messages */
+.merr{background:rgba(226,75,74,.1);border:.5px solid rgba(226,75,74,.28);border-radius:var(--rsm);
+  padding:9px 13px;font-size:12px;color:var(--rlt);font-family:var(--mono);margin-bottom:13px;display:none;animation:fadeUp .3s ease}
+.mok{background:rgba(29,158,117,.1);border:.5px solid rgba(29,158,117,.28);border-radius:var(--rsm);
+  padding:9px 13px;font-size:12px;color:var(--tlt);margin-bottom:13px;display:none;align-items:center;gap:8px;animation:fadeUp .3s ease}
+
+/* Fields */
+.field{margin-bottom:14px}
+.flbl{display:block;font-size:10px;color:var(--tx2);font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px}
+.fw{position:relative}
+.fi2{width:100%;padding:11px 16px;background:rgba(255,255,255,.04);border:.5px solid rgba(99,178,255,.16);
+  border-radius:var(--rsm);font-size:14px;font-family:var(--sans);color:var(--tx);outline:none;
+  transition:border-color .15s,background .15s;-webkit-appearance:none}
+.fi2::placeholder{color:var(--tx3)}
+.fi2:focus{border-color:rgba(59,139,212,.55);background:rgba(59,139,212,.045)}
+.fi2.pr{padding-right:44px}
+.feye{position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--tx3);transition:color .15s;line-height:0}
+.feye:hover{color:var(--tx2)}
+.frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:19px}
+.ckl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);cursor:pointer}
+.ckl input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer}
+.lsm{font-size:12px;color:var(--blt);font-family:var(--mono);text-decoration:none;transition:color .15s}
+.lsm:hover{color:var(--blue)}
+
+/* CTA */
+.bcta{width:100%;padding:13px;background:var(--bdk);color:var(--tx);border:none;border-radius:var(--rsm);
+  font-size:14px;font-weight:500;font-family:var(--sans);cursor:pointer;
+  transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:9px;
+  -webkit-tap-highlight-color:transparent}
+.bcta:hover{background:var(--blue)}.bcta:active{transform:scale(.99)}.bcta:disabled{opacity:.6;pointer-events:none}
+.bspin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;
+  animation:spin .65s linear infinite;display:none;flex-shrink:0}
+
+/* Divider / SSO */
+.div{display:flex;align-items:center;gap:12px;margin:17px 0 15px;font-size:11px;color:var(--tx3)}
+.div::before,.div::after{content:'';flex:1;height:.5px;background:rgba(99,178,255,.1)}
+.bsso{width:100%;padding:11px;background:rgba(255,255,255,.03);border:.5px solid var(--bdr);
+  border-radius:var(--rsm);color:var(--tx2);font-size:13px;font-family:var(--sans);cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:9px;-webkit-tap-highlight-color:transparent}
+.bsso:hover{background:rgba(255,255,255,.06);border-color:var(--bdr2)}
+
+/* MFA */
+.mfaw{display:none}
+.mfah{font-size:12px;color:var(--tx2);font-family:var(--mono);margin-bottom:10px}
+.orow{display:flex;gap:8px}
+.obox{flex:1;padding:12px 4px;text-align:center;font-size:20px;font-family:var(--mono);font-weight:500;
+  background:rgba(255,255,255,.04);border:.5px solid var(--bdr);border-radius:var(--rsm);color:var(--tx);
+  outline:none;transition:border-color .15s;-webkit-appearance:none}
+.obox:focus{border-color:rgba(59,139,212,.55);background:rgba(59,139,212,.04)}
+.lbk{display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--tx2);
+  font-family:var(--mono);cursor:pointer;transition:color .15s}
+.lbk:hover{color:var(--blt)}
+
+/* Success */
+.sscr{display:none;text-align:center;animation:fadeUp .5s ease}
+.schk{width:58px;height:58px;border-radius:50%;background:rgba(29,158,117,.12);border:.5px solid rgba(29,158,117,.3);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+  animation:chkPop .4s cubic-bezier(.34,1.56,.64,1) both}
+.snm{font-size:21px;font-weight:500;margin-bottom:5px}
+.ssb{font-size:12px;color:var(--tx2);font-family:var(--mono);margin-bottom:22px}
+.rw{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:9px}
+.rb2{height:100%;background:var(--teal);border-radius:2px;width:0;transition:width 2.2s linear}
+.rh{font-size:10px;color:var(--tx3);font-family:var(--mono)}
+.sftr{margin-top:22px;text-align:center;font-size:10px;color:var(--tx3);font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 12px;letter-spacing:.03em}
+.si{display:flex;align-items:center;gap:4px}
+
+/* Login responsive */
+@media(max-width:860px){
+  .lw{grid-template-columns:1fr}
+  .lp{border-right:none;border-bottom:.5px solid var(--bdr);padding:28px 24px 24px}
+  .lp-main{padding:22px 0 18px}.headline{font-size:26px}
+  .feat-grid{gap:9px}.b1,.b2,.b3{display:none}
+  .rp{padding:32px 24px}
+}
+@media(max-width:480px){.feat-grid{grid-template-columns:1fr}.orow{gap:5px}.obox{font-size:16px;padding:10px 3px}}
+
+/* ══════════════════════════════════════════════════════════
+   DASHBOARD SCREEN
+══════════════════════════════════════════════════════════ */
+#DS{animation:fadeIn .45s ease both}
+
+/* Topbar */
+.tb{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;
+  border-bottom:.5px solid var(--bdr);background:var(--sur);position:sticky;top:0;z-index:100}
+.tbl{display:flex;align-items:center;gap:10px}
+.tbr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tp{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 2s ease-in-out infinite}
+.tbr-brand{font-size:13px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.tbr-sb{font-size:10px;color:var(--tx2);font-family:var(--mono)}
+.dchip{display:flex;align-items:center;gap:7px;background:rgba(59,139,212,.1);
+  border:.5px solid rgba(59,139,212,.3);border-radius:20px;padding:4px 11px 4px 5px}
+.dav{width:24px;height:24px;border-radius:50%;background:rgba(59,139,212,.2);color:var(--blt);
+  font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.dnm{font-size:11px;font-weight:500}
+.drl{font-size:9px;color:var(--tx2);font-family:var(--mono)}
+.bdg{font-size:9px;font-family:var(--mono);font-weight:500;padding:3px 8px;border-radius:4px;letter-spacing:.04em;white-space:nowrap}
+.bfl {background:rgba(127,119,221,.12);color:var(--plt);border:.5px solid rgba(127,119,221,.25)}
+.bedge{background:rgba(29,158,117,.1); color:var(--tlt);border:.5px solid rgba(29,158,117,.2)}
+.bcl {background:rgba(59,139,212,.1); color:var(--blt);border:.5px solid rgba(59,139,212,.2)}
+.tlive{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--teal);font-family:var(--mono)}
+.tld{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 1s ease-in-out infinite}
+.blog{font-size:10px;padding:4px 10px;background:rgba(226,75,74,.08);color:var(--rlt);
+  border:.5px solid rgba(226,75,74,.25);border-radius:5px;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.blog:hover{background:rgba(226,75,74,.16)}
+
+/* Dashboard layout */
+.dash{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.lay{display:grid;grid-template-columns:192px 1fr 186px;gap:10px}
+.panel{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 13px}
+.plbl{font-size:9px;font-family:var(--mono);color:var(--tx2);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.pdot{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:4px}
+
+/* Patient list */
+.ptl{display:flex;flex-direction:column;gap:5px}
+.pti{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;cursor:pointer;
+  transition:background .15s;border:.5px solid transparent}
+.pti:hover{background:rgba(255,255,255,.03)}
+.pti.active{background:rgba(59,139,212,.1);border-color:rgba(59,139,212,.3)}
+.ptav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;flex-shrink:0}
+.ptnm{font-size:11px;font-weight:500}
+.ptmt{font-size:9px;color:var(--tx2);font-family:var(--mono)}
+.sd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sn{background:var(--teal)}.sw{background:var(--amb);animation:pulse 1.2s ease-in-out infinite}
+.sc{background:var(--red);animation:pulse .7s ease-in-out infinite}
+.sinf{font-size:9px;color:var(--tx3);font-family:var(--mono);margin-top:8px;padding-top:7px;
+  border-top:.5px solid var(--bdr);line-height:1.55}
+
+/* Main col */
+.mc{display:flex;flex-direction:column;gap:10px}
+.phdr{display:flex;align-items:center;justify-content:space-between;background:var(--sur);
+  border:.5px solid var(--bdr);border-radius:var(--r);padding:9px 13px}
+.phl{display:flex;align-items:center;gap:10px}
+.phav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600}
+.phnm{font-size:13px;font-weight:500}
+.phmt{font-size:10px;color:var(--tx2);font-family:var(--mono)}
+.vtag{display:inline-block;font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:500}
+
+/* Vitals — 4 col */
+.vrow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.vc{background:rgba(255,255,255,.025);border:.5px solid var(--bdr);border-radius:8px;
+  padding:11px 12px;position:relative;overflow:hidden}
+.vc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:8px 8px 0 0}
+.vc-hr::before {background:var(--red)}
+.vc-tmp::before{background:var(--amb)}
+.vc-spo::before{background:var(--blue)}
+.vc-bp::before {background:var(--pur)}
+.vlbl{font-size:9px;font-family:var(--mono);color:var(--tx2);letter-spacing:.07em;text-transform:uppercase;
+  margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.vdot{width:7px;height:7px;border-radius:50%}
+.vval{font-size:26px;font-family:var(--mono);font-weight:500;line-height:1}
+.vunt{font-size:11px;color:var(--tx2);margin-left:2px}
+.vrng{font-size:9px;color:var(--tx2);font-family:var(--mono);margin-top:3px}
+
+/* Canvases */
+canvas.wv{width:100%;height:64px;display:block;border-radius:4px;background:rgba(255,255,255,.015);border:.5px solid var(--bdr)}
+canvas.sv{width:100%;height:48px;display:block;border-radius:4px;background:rgba(255,255,255,.015);border:.5px solid var(--bdr)}
+
+/* Right col */
+.rc{display:flex;flex-direction:column;gap:10px}
+.ar{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;font-size:10px;
+  margin-bottom:4px;background:rgba(255,255,255,.02);border:.5px solid var(--bdr)}
+.anm{flex:1;font-weight:500;font-size:10px}
+.adt{font-size:9px;color:var(--tx2);font-family:var(--mono)}
+.flp{margin-top:8px;padding-top:7px;border-top:.5px solid var(--bdr)}
+.fll{display:flex;justify-content:space-between;font-size:9px;font-family:var(--mono);color:var(--tx2);margin-bottom:4px}
+.pbw{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.pbf{height:100%;border-radius:2px;background:var(--pur);transition:width 1s ease}
+.tr{display:flex;align-items:center;justify-content:space-between;padding:5px 0;
+  border-bottom:.5px solid rgba(99,178,255,.07);font-size:10px}
+.tr:last-child{border-bottom:none}
+.tk{color:var(--tx2);font-family:var(--mono);font-size:9px}
+.ti{background:rgba(255,255,255,.05);border:.5px solid var(--bdr);border-radius:4px;padding:2px 6px;
+  font-size:10px;font-family:var(--mono);color:var(--tx);width:52px;text-align:right;outline:none;transition:border-color .15s}
+.ti:focus{border-color:rgba(59,139,212,.5)}
+
+/* Bottom row — 3 col */
+.brow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.al{display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto}
+.ai{display:flex;align-items:flex-start;gap:7px;padding:6px 9px;border-radius:5px;font-size:10px;animation:ain .35s ease}
+.ai.ac{background:rgba(226,75,74,.1);border:.5px solid rgba(226,75,74,.2)}
+.ai.aw{background:rgba(239,159,39,.1);border:.5px solid rgba(239,159,39,.2)}
+.ai.af{background:rgba(59,139,212,.07);border:.5px solid rgba(59,139,212,.18)}
+.aib{flex:1}
+.ait{font-weight:500;margin-bottom:1px}
+.aid{color:var(--tx2);font-family:var(--mono);font-size:9px}
+.aitm{font-size:9px;color:var(--tx2);font-family:var(--mono);flex-shrink:0}
+
+/* Data store */
+.stg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.stc{background:rgba(255,255,255,.02);border:.5px solid var(--bdr);border-radius:6px;padding:6px 8px}
+.stcl{font-size:8px;font-family:var(--mono);color:var(--tx2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.stcv{font-size:11px;font-family:var(--mono);font-weight:500;color:var(--blt)}
+.stcs{font-size:8px;color:var(--tx2);font-family:var(--mono);margin-top:1px}
+
+/* SMS panel */
+.sms-cfg{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:6px;
+  background:rgba(29,158,117,.07);border:.5px solid rgba(29,158,117,.2);margin-bottom:9px}
+.sms-lbl{font-size:10px;color:var(--tx2);font-family:var(--mono)}
+.sms-num{font-size:11px;font-weight:500;color:var(--tlt);font-family:var(--mono)}
+.sms-tog-w{display:flex;align-items:center;gap:7px}
+.stog{position:relative;width:32px;height:18px;flex-shrink:0}
+.stog input{opacity:0;width:100%;height:100%;position:absolute;cursor:pointer;margin:0;z-index:1}
+.stog-tr{position:absolute;inset:0;border-radius:9px;background:var(--teal);transition:background .2s}
+.stog input:not(:checked)~.stog-tr{background:rgba(255,255,255,.12)}
+.stog-th{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none}
+.stog input:checked~.stog-th{transform:translateX(14px)}
+.sms-api{margin-bottom:8px}
+.sms-api-lbl{font-size:9px;color:var(--tx2);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.sms-api-row{display:flex;gap:6px}
+.sms-api-inp{flex:1;background:rgba(255,255,255,.04);border:.5px solid rgba(99,178,255,.18);border-radius:6px;
+  padding:6px 10px;font-size:10px;font-family:var(--mono);color:var(--tx);outline:none;
+  transition:border-color .15s}
+.sms-api-inp:focus{border-color:rgba(59,139,212,.4)}
+.sms-api-hint{font-size:9px;color:var(--tx3);font-family:var(--mono);margin-top:3px}
+.sms-log{display:flex;flex-direction:column;gap:5px;max-height:130px;overflow-y:auto}
+.smsit{border-radius:6px;padding:7px 9px;border:.5px solid var(--bdr);background:rgba(255,255,255,.02);animation:ain .3s ease}
+.smsit.sending{border-color:rgba(239,159,39,.25);background:rgba(239,159,39,.05)}
+.smsit.sent   {border-color:rgba(29,158,117,.2); background:rgba(29,158,117,.04)}
+.smsit.failed {border-color:rgba(226,75,74,.2);  background:rgba(226,75,74,.04)}
+.smsit.open-sms{border-color:rgba(59,139,212,.2);background:rgba(59,139,212,.04)}
+.smsr1{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.smsr2{display:flex;align-items:center;gap:8px}
+.smsbdg{font-size:8px;font-family:var(--mono);font-weight:600;padding:1px 5px;border-radius:3px;flex-shrink:0;letter-spacing:.05em}
+.smsbdg.critical{background:rgba(226,75,74,.15);color:var(--rlt);border:.5px solid rgba(226,75,74,.3)}
+.smsbdg.warning {background:rgba(239,159,39,.12);color:var(--alt);border:.5px solid rgba(239,159,39,.25)}
+.smst{font-size:10px;font-weight:500;flex:1}
+.smstm{font-size:9px;color:var(--tx3);font-family:var(--mono);flex-shrink:0}
+.smsto{font-size:9px;color:var(--tx2);font-family:var(--mono);flex:1}
+.smsst{font-size:9px;font-family:var(--mono);flex-shrink:0}
+.smsopen{font-size:9px;color:var(--blt);font-family:var(--mono);text-decoration:none;flex-shrink:0;
+  padding:1px 5px;border-radius:3px;border:.5px solid rgba(59,139,212,.25);background:rgba(59,139,212,.08);transition:background .15s}
+.smsopen:hover{background:rgba(59,139,212,.15)}
+
+/* Buttons */
+.dbtn{padding:5px 11px;border-radius:5px;font-size:10px;font-family:var(--sans);font-weight:500;cursor:pointer;border:.5px solid;transition:all .15s}
+.dp{background:rgba(59,139,212,.12);color:var(--blt);border-color:rgba(59,139,212,.3)}
+.dp:hover{background:rgba(59,139,212,.22)}
+.dd{background:rgba(226,75,74,.1);color:var(--rlt);border-color:rgba(226,75,74,.28)}
+.dd:hover{background:rgba(226,75,74,.2)}
+.smok{background:rgba(29,158,117,.1);color:var(--tlt);border-color:rgba(29,158,117,.25);white-space:nowrap}
+.smok:hover{background:rgba(29,158,117,.18)}
+.spnr{display:inline-block;animation:spin 2s linear infinite}
+
+/* Toast */
+.tw{position:fixed;top:58px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:#1a0a08;border:1px solid rgba(226,75,74,.45);border-radius:8px;padding:11px 13px;
+  display:flex;align-items:flex-start;gap:9px;min-width:250px;max-width:310px;
+  animation:toastIn .3s ease;pointer-events:all;box-shadow:0 4px 20px rgba(226,75,74,.15)}
+.toast-ti{font-size:12px;font-weight:500;color:var(--rlt);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.toast-msg{font-size:10px;color:var(--tx2);font-family:var(--mono);line-height:1.4}
+.toast-sms-line{display:flex;align-items:center;justify-content:space-between;margin-top:6px;
+  padding-top:6px;border-top:.5px solid rgba(255,255,255,.06)}
+.tx{cursor:pointer;opacity:.5;font-size:13px;margin-left:auto;flex-shrink:0}
+
+/* Dashboard responsive */
+@media(max-width:1000px){
+  .lay{grid-template-columns:1fr 1fr}
+  .rc{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr}
+  .brow{grid-column:1/3}
+  .vrow{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){
+  .lay{grid-template-columns:1fr}.rc{grid-column:1;grid-template-columns:1fr}
+  .vrow{grid-template-columns:1fr 1fr}.brow{grid-template-columns:1fr}
+  .tbr .bdg{display:none}
+}
+@media(max-width:480px){.vrow{grid-template-columns:1fr}.brow{grid-template-columns:1fr}}
+
+/* ── Colorful Console Panel ──────────────────────────────── */
+.con-wrap{display:flex;flex-direction:column;height:100%}
+.con-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:7px;border-bottom:.5px solid var(--bdr)}
+.con-filters{display:flex;gap:5px;flex-wrap:wrap}
+.con-fbtn{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:3px;cursor:pointer;
+  border:.5px solid transparent;transition:all .15s;opacity:.5}
+.con-fbtn.active{opacity:1}
+.con-fbtn.f-all    {background:rgba(255,255,255,.05);color:var(--tx);border-color:var(--bdr2)}
+.con-fbtn.f-crit   {background:rgba(226,75,74,.12);color:var(--rlt);border-color:rgba(226,75,74,.3)}
+.con-fbtn.f-warn   {background:rgba(239,159,39,.1); color:var(--alt);border-color:rgba(239,159,39,.25)}
+.con-fbtn.f-sms    {background:rgba(29,158,117,.1); color:var(--tlt);border-color:rgba(29,158,117,.25)}
+.con-fbtn.f-sys    {background:rgba(59,139,212,.08);color:var(--blt);border-color:rgba(59,139,212,.2)}
+.con-panel{flex:1;display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.con-row{padding:7px 10px;border-radius:6px;animation:ain .3s ease;border-right:.5px solid rgba(255,255,255,.04)}
+.con-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.con-badge{font-size:8px;font-family:var(--mono);font-weight:700;padding:2px 6px;border-radius:3px;
+  letter-spacing:.06em;flex-shrink:0;white-space:nowrap}
+.con-title{font-size:10px;font-weight:500;flex:1}
+.con-time{font-size:9px;color:var(--tx3);font-family:var(--mono);flex-shrink:0}
+.con-detail{font-size:9px;color:var(--tx2);font-family:var(--mono);padding-left:2px;line-height:1.4}
+.con-extra{font-size:9px;padding-left:2px;margin-top:2px}
+.con-empty{font-size:10px;color:var(--tx3);font-family:var(--mono);padding:14px;text-align:center;opacity:.6}
+
+/* Recipients list */
+.rec-row{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:6px;
+  background:rgba(255,255,255,.025);border:.5px solid var(--bdr);margin-bottom:5px}
+.rec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rec-name{font-size:11px;font-weight:500;flex:1}
+.rec-num{font-size:10px;font-family:var(--mono);color:var(--tx2)}
+.rec-role{font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:3px;flex-shrink:0}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="LS" class="screen active">
+  <div class="bg-grid"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+  <div class="lw">
+    <!-- Left -->
+    <div class="lp">
+      <div class="brand-lock">
+        <div class="brand-icon">
+          <div class="brand-ring"></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="#85B7EB" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="#85B7EB" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div><div class="brand-nm">MedEdge</div><div class="brand-sb">Clinical Intelligence Platform</div></div>
+      </div>
+
+      <div class="lp-main">
+        <div class="headline">Real-time vitals,<br><strong>federated intelligence.</strong></div>
+        <p class="tagline">Secure, HIPAA-compliant monitoring with HR, Temperature, SpO₂ and Blood Pressure — powered by edge inference and federated learning. Alerts forwarded instantly via SMS.</p>
+        <div class="feat-grid">
+          <div class="fc"><div class="fi" style="background:rgba(59,139,212,.12);border:.5px solid rgba(59,139,212,.2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="2,12 8,12 10,4 12,20 14,10 16,14 18,14 22,14" stroke="#85B7EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ft">Live vitals — 4 params</div><div class="fd">HR · Temp · SpO₂ · Blood Pressure</div></div>
+          <div class="fc"><div class="fi" style="background:rgba(127,119,221,.1);border:.5px solid rgba(127,119,221,.2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#AFA9EC" stroke-width="1.5"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ft">Federated learning</div><div class="fd">Data stays on device — only gradients sync</div></div>
+          <div class="fc"><div class="fi" style="background:rgba(29,158,117,.1);border:.5px solid rgba(29,158,117,.2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#5DCAA5" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div class="ft">Instant SMS alerts</div><div class="fd">Real-time forwarding to +91 93610 44807</div></div>
+          <div class="fc"><div class="fi" style="background:rgba(239,159,39,.1);border:.5px solid rgba(239,159,39,.2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 1v3M10 1v3M14 1v3" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ft">BP monitoring</div><div class="fd">Systolic/diastolic with hypertension alerts</div></div>
+        </div>
+      </div>
+
+      <div class="lp-foot">
+        <span class="pill p-fl">FL v2.4</span>
+        <span class="pill p-edge">Edge</span>
+        <span class="pill p-cl">Cloud</span>
+        <span class="pill p-hip">HIPAA</span>
+        <div class="live-p"><div class="ld"></div>All systems online</div>
+      </div>
+    </div>
+
+    <!-- Right / Form -->
+    <div class="rp">
+      <div class="lc">
+        <div class="lc-ti">Sign in</div>
+        <div class="lc-sb">secure · role-scoped · audited · v2.4</div>
+
+        <div class="rg" id="roleGrid">
+          <div class="rb active" onclick="selRole(this,'doctor')"><div class="ri" style="background:rgba(59,139,212,.15)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#85B7EB" stroke-width="1.4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#85B7EB" stroke-width="1.4" stroke-linecap="round"/><path d="M12 15v4M10 17h4" stroke="#85B7EB" stroke-width="1.3" stroke-linecap="round"/></svg></div><div class="rl">Doctor</div><div class="rd">Full access</div></div>
+          <div class="rb" onclick="selRole(this,'nurse')"><div class="ri" style="background:rgba(29,158,117,.12)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#5DCAA5" stroke-width="1.4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#5DCAA5" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="rl">Nurse</div><div class="rd">Monitor only</div></div>
+          <div class="rb" onclick="selRole(this,'admin')"><div class="ri" style="background:rgba(239,159,39,.12)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#FAC775" stroke-width="1.4"/><circle cx="12" cy="12" r="2.5" stroke="#FAC775" stroke-width="1.4"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3" stroke="#FAC775" stroke-width="1.3" stroke-linecap="round"/></svg></div><div class="rl">Admin</div><div class="rd">System config</div></div>
+          <div class="rb" onclick="selRole(this,'patient')"><div class="ri" style="background:rgba(127,119,221,.12)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#AFA9EC" stroke-width="1.4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#AFA9EC" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="rl">Patient</div><div class="rd">Own data</div></div>
+        </div>
+
+        <div class="dh" id="demoH">Doctor: <strong>DR001</strong> / <strong>doctor123</strong> &nbsp;·&nbsp; Nurse: <strong>NR101</strong> / <strong>nurse123</strong><br>Admin: <strong>AD001</strong> / <strong>admin123</strong> &nbsp;·&nbsp; Patient: <strong>P001</strong> / <strong>patient123</strong></div>
+
+        <div class="merr" id="mErr"></div>
+        <div class="mok"  id="mOk"></div>
+
+        <div id="loginForm">
+          <div class="field">
+            <label class="flbl">Employee ID / Email</label>
+            <div class="fw"><input class="fi2" id="eInp" type="text" placeholder="DR001 or email@hospital.org" autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false"></div>
+          </div>
+          <div class="field">
+            <label class="flbl">Password</label>
+            <div class="fw">
+              <input class="fi2 pr" id="pInp" type="password" placeholder="Enter password" autocomplete="current-password">
+              <span class="feye" onclick="toggleEye()">
+                <svg id="eyO" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4"/></svg>
+                <svg id="eyC" width="17" height="17" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-6.364 0-10-7-10-7a17.6 17.6 0 014.72-5.36M9.9 4.24A9.12 9.12 0 0112 4c6.364 0 10 7 10 7a17.6 17.6 0 01-2.06 3.1M1 1l22 22" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
+            </div>
+          </div>
+          <div class="frow">
+            <label class="ckl"><input type="checkbox" id="remChk"><span>Remember this device</span></label>
+            <a href="#" class="lsm" onclick="forgotPwd(event)">Forgot password?</a>
+          </div>
+          <button class="bcta" id="loginBtn" onclick="doLogin()">
+            <div class="bspin" id="bSpin"></div>
+            <span id="bTxt">Sign in to dashboard</span>
+          </button>
+          <div class="div">or continue with</div>
+          <button class="bsso" onclick="doSSO()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#85B7EB" stroke-width="1.3"/></svg>
+            Hospital SSO
+          </button>
+        </div>
+
+        <!-- MFA -->
+        <div class="mfaw" id="mfaW">
+          <div class="mfah">Enter the 6-digit code sent to your registered device</div>
+          <div class="orow">
+            <input class="obox" id="o0" maxlength="1" inputmode="numeric">
+            <input class="obox" id="o1" maxlength="1" inputmode="numeric">
+            <input class="obox" id="o2" maxlength="1" inputmode="numeric">
+            <input class="obox" id="o3" maxlength="1" inputmode="numeric">
+            <input class="obox" id="o4" maxlength="1" inputmode="numeric">
+            <input class="obox" id="o5" maxlength="1" inputmode="numeric">
+          </div>
+          <button class="bcta" style="margin-top:15px" onclick="verifyOTP()">
+            <div class="bspin" id="oSpin"></div><span id="oTxt">Verify &amp; open dashboard</span>
+          </button>
+          <span class="lbk" onclick="backToLogin()">← Back to login</span>
+        </div>
+
+        <!-- Success -->
+        <div class="sscr" id="succScr">
+          <div class="schk"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="snm" id="succNm">Welcome</div>
+          <div class="ssb" id="succSb">Session authenticated</div>
+          <div class="rw"><div class="rb2" id="redirB"></div></div>
+          <div class="rh">Opening dashboard…</div>
+        </div>
+
+        <div class="sftr">
+          <span class="si"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>HIPAA compliant</span>
+          <span class="si">TLS 1.3</span><span class="si">AES-256</span><span class="si">Zero-trust</span><span class="si">MFA enforced</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     DASHBOARD SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="DS" class="screen">
+  <div class="tw" id="toastW"></div>
+
+  <div class="tb">
+    <div class="tbl">
+      <div class="tp"></div>
+      <div><div class="tbr-brand">MedEdge</div><div class="tbr-sb" id="wLbl">Dashboard</div></div>
+    </div>
+    <div class="dchip">
+      <div class="dav" id="dAv">AS</div>
+      <div><div class="dnm" id="dNm">Dr. Arjun Sharma</div><div class="drl" id="dRl">Doctor · ICU-3</div></div>
+    </div>
+    <div class="tbr">
+      <span class="bdg bfl">FL v2.4</span>
+      <span class="bdg bedge">Edge</span>
+      <span class="bdg bcl">Cloud</span>
+      <div class="tlive"><div class="tld"></div><span id="dbClock">--:--:--</span></div>
+      <button class="blog" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="lay">
+
+      <!-- Patient list -->
+      <div class="panel">
+        <div class="plbl"><span><span class="pdot" style="background:var(--blue)"></span>Patients</span><span>4 active</span></div>
+        <div class="ptl" id="ptList"></div>
+        <div class="sinf">Session: <span id="sessId">DR001</span><br>Duration: <span id="sessDur">00:00</span> · Morning</div>
+      </div>
+
+      <!-- Main col -->
+      <div class="mc">
+        <div class="phdr">
+          <div class="phl">
+            <div class="phav" id="phAv"></div>
+            <div><div class="phnm" id="phNm">—</div><div class="phmt" id="phMt">—</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="vtag" id="phTag"></span>
+            <button class="dbtn dp" onclick="simAlert()">Simulate Alert</button>
+          </div>
+        </div>
+
+        <!-- 4 vital cards -->
+        <div class="vrow">
+          <div class="vc vc-hr">
+            <div class="vlbl"><span class="vdot" style="background:var(--red)"></span>Heart Rate</div>
+            <div><span class="vval" id="vHR" style="color:var(--red)">--</span><span class="vunt">bpm</span></div>
+            <div class="vrng">Normal: 60–100 bpm</div>
+            <span class="vtag" id="tHR" style="margin-top:5px"></span>
+          </div>
+          <div class="vc vc-tmp">
+            <div class="vlbl"><span class="vdot" style="background:var(--amb)"></span>Temperature</div>
+            <div><span class="vval" id="vTMP" style="color:var(--amb)">--</span><span class="vunt">°C</span></div>
+            <div class="vrng">Normal: 36.1–37.2 °C</div>
+            <span class="vtag" id="tTMP" style="margin-top:5px"></span>
+          </div>
+          <div class="vc vc-spo">
+            <div class="vlbl"><span class="vdot" style="background:var(--blue)"></span>SpO₂</div>
+            <div><span class="vval" id="vSPO" style="color:var(--blue)">--</span><span class="vunt">%</span></div>
+            <div class="vrng">Normal: 95–100 %</div>
+            <span class="vtag" id="tSPO" style="margin-top:5px"></span>
+          </div>
+          <div class="vc vc-bp">
+            <div class="vlbl"><span class="vdot" style="background:var(--pur)"></span>Blood Pressure</div>
+            <div style="display:flex;align-items:baseline;gap:2px">
+              <span class="vval" id="vBPs" style="color:var(--plt);font-size:21px">--</span>
+              <span style="font-size:13px;color:var(--tx2)">/</span>
+              <span class="vval" id="vBPd" style="color:var(--pur);font-size:16px">--</span>
+              <span class="vunt">mmHg</span>
+            </div>
+            <div class="vrng">Normal: 90–120 / 60–80</div>
+            <span class="vtag" id="tBP" style="margin-top:5px"></span>
+          </div>
+        </div>
+
+        <!-- Waveforms -->
+        <div class="panel">
+          <div class="plbl" style="margin-bottom:5px"><span><span class="pdot" style="background:var(--red)"></span>ECG Waveform</span><span style="font-size:9px;color:var(--teal)">EDGE PROCESSED</span></div>
+          <canvas class="wv" id="ecgC" height="64"></canvas>
+          <div class="plbl" style="margin-top:9px;margin-bottom:4px"><span><span class="pdot" style="background:var(--blue)"></span>SpO₂ Trend</span><span style="font-size:9px;color:var(--blt)">FL INFERRED</span></div>
+          <canvas class="sv" id="spo2C" height="48"></canvas>
+          <div class="plbl" style="margin-top:9px;margin-bottom:4px"><span><span class="pdot" style="background:var(--pur)"></span>BP Trend — Systolic</span><span style="font-size:9px;color:var(--plt)">EDGE PROCESSED</span></div>
+          <canvas class="sv" id="bpC" height="48"></canvas>
+        </div>
+      </div>
+
+      <!-- Right col -->
+      <div class="rc">
+        <div class="panel">
+          <div class="plbl"><span><span class="pdot" style="background:var(--pur)"></span>FL Architecture</span></div>
+          <div class="ar"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="2" stroke="#5DCAA5" stroke-width="1.1"/><path d="M5 12v2M11 12v2M3 14h10" stroke="#5DCAA5" stroke-width="1.1" stroke-linecap="round"/></svg><div style="flex:1"><div class="anm">Edge Node</div><div class="adt">Local inference</div></div><div class="tld" style="background:var(--tlt)"></div></div>
+          <div style="display:flex;justify-content:center;padding:2px 0"><svg width="10" height="12" viewBox="0 0 10 14"><path d="M5 0v10M1 7l4 5 4-5" stroke="#AFA9EC" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="ar"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="6" width="12" height="8" rx="2" stroke="#AFA9EC" stroke-width="1.1"/><path d="M5 6V4.5a3 3 0 016 0V6" stroke="#AFA9EC" stroke-width="1.1" stroke-linecap="round"/></svg><div style="flex:1"><div class="anm">FL Aggregator</div><div class="adt">FedAvg · DP</div></div><div class="tld" style="background:var(--plt)"></div></div>
+          <div style="display:flex;justify-content:center;padding:2px 0"><svg width="10" height="12" viewBox="0 0 10 14"><path d="M5 0v10M1 7l4 5 4-5" stroke="#85B7EB" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="ar"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 10c-1.1-.4-2-1.4-2-2.5 0-1.5 1.3-2.5 2.8-2.5h.3C4.5 3.8 5.9 3 7.5 3c2 0 3.5 1.5 3.5 3.5h.5C12.9 6.5 14 7.6 14 9s-1.1 2.5-2.5 2.5H3z" stroke="#85B7EB" stroke-width="1.1" stroke-linejoin="round"/></svg><div style="flex:1"><div class="anm">Cloud Store</div><div class="adt">Central repo</div></div><div class="tld" style="background:var(--blt)"></div></div>
+          <div class="flp">
+            <div class="fll"><span>Round <span id="flR">12</span></span><span id="flP">74%</span></div>
+            <div class="pbw"><div class="pbf" id="flBar" style="width:74%"></div></div>
+            <div style="font-size:8px;color:var(--tx3);font-family:var(--mono);margin-top:3px">Differential privacy · Secure aggregation</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="plbl"><span><span class="pdot" style="background:var(--amb)"></span>Alert Thresholds</span></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">HR max</div><div class="tk">bpm</div></div><input class="ti" type="number" id="tHmax" value="100" onchange="updateThr()"></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">HR min</div><div class="tk">bpm</div></div><input class="ti" type="number" id="tHmin" value="50"  onchange="updateThr()"></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">Temp max</div><div class="tk">°C</div></div><input class="ti" type="number" id="tTmax" value="38.0" step="0.1" onchange="updateThr()"></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">SpO₂ min</div><div class="tk">%</div></div><input class="ti" type="number" id="tSmin" value="94"  onchange="updateThr()"></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">BP sys max</div><div class="tk">mmHg</div></div><input class="ti" type="number" id="tBPsmax" value="140" onchange="updateThr()"></div>
+          <div class="tr"><div><div style="font-size:10px;font-weight:500">BP sys min</div><div class="tk">mmHg</div></div><input class="ti" type="number" id="tBPsmin" value="90"  onchange="updateThr()"></div>
+        </div>
+
+        <div class="panel" style="margin-top:0;border:.5px solid var(--bdr)">
+          <div class="plbl"><span><span class="pdot" style="background:var(--teal)"></span>Data Store</span><span style="font-size:9px;color:var(--teal);font-family:var(--mono)"><span class="spnr">↻</span> LIVE</span></div>
+          <div class="stg" id="storeGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row: Alert log | SMS dispatch | Colorful Console -->
+    <div class="brow" style="grid-template-columns:1fr 1fr 1.4fr">
+
+      <div class="panel">
+        <div class="plbl"><span><span class="pdot" style="background:var(--red)"></span>Alert Log · Trigger Module</span><button class="dbtn dd" style="font-size:9px;padding:2px 7px" onclick="clearAlerts()">Clear</button></div>
+        <div class="al" id="alertList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="plbl" style="margin-bottom:8px">
+          <span><span class="pdot" style="background:var(--teal)"></span>SMS Dispatch · Dual Alert</span>
+          <button class="dbtn dd" style="font-size:9px;padding:2px 7px" onclick="clearSMSLog()">Clear</button>
+        </div>
+
+        <!-- Recipients -->
+        <div id="recList" style="margin-bottom:9px"></div>
+
+        <!-- SMS toggle + API -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:9px;color:var(--tx2);font-family:var(--mono)">Auto-forward SMS</span>
+          <div style="display:flex;align-items:center;gap:7px">
+            <label class="stog">
+              <input type="checkbox" id="smsToggle" checked onchange="SMS_CFG.on=this.checked;document.getElementById('sDot').style.background=this.checked?'var(--teal)':'var(--tx3)'">
+              <div class="stog-tr"></div><div class="stog-th"></div>
+            </label>
+            <div class="tld" id="sDot"></div>
+          </div>
+        </div>
+
+        <div class="sms-api" style="margin-bottom:8px">
+          <div class="sms-api-lbl">Fast2SMS API Key &nbsp;<a href="https://fast2sms.com" target="_blank" style="color:var(--tlt);text-decoration:none">fast2sms.com ↗</a></div>
+          <div class="sms-api-row">
+            <input id="apiKeyInp" class="sms-api-inp" type="password" placeholder="Paste API key for auto-send…"
+              onfocus="this.type='text'" onblur="this.type='password'"
+              oninput="SMS_CFG.apiKey=this.value.trim()">
+            <button class="dbtn smok" onclick="testSMS()">Test</button>
+          </div>
+          <div class="sms-api-hint">Free 100 SMS/day · Sign up → Dev → API → Copy key</div>
+        </div>
+
+        <div class="sms-log" id="smsLog" style="max-height:150px">
+          <div style="font-size:10px;color:var(--tx3);font-family:var(--mono);padding:8px 0;text-align:center">No SMS dispatched yet</div>
+        </div>
+      </div>
+
+      <!-- Colorful Console -->
+      <div class="panel" style="display:flex;flex-direction:column">
+        <div class="plbl" style="margin-bottom:6px">
+          <span>
+            <span class="pdot" style="background:linear-gradient(135deg,#E24B4A,#7F77DD)"></span>
+            Live Console
+          </span>
+          <div style="display:flex;gap:5px;align-items:center">
+            <button class="dbtn" style="font-size:9px;padding:2px 7px;background:rgba(127,119,221,.1);color:var(--plt);border-color:rgba(127,119,221,.25)" onclick="clearConsole()">Clear</button>
+            <button class="dbtn dp" style="font-size:9px;padding:2px 7px" onclick="toggleConScroll()" id="scrollBtn">↑ Auto</button>
+          </div>
+        </div>
+
+        <!-- Filter buttons -->
+        <div class="con-filters" style="margin-bottom:8px;gap:4px">
+          <button class="con-fbtn f-all active"  onclick="filterCon('all',this)">ALL</button>
+          <button class="con-fbtn f-crit"         onclick="filterCon('critical',this)">🚨 CRIT</button>
+          <button class="con-fbtn f-warn"         onclick="filterCon('warning',this)">⚡ WARN</button>
+          <button class="con-fbtn f-sms"          onclick="filterCon('sms',this)">📱 SMS</button>
+          <button class="con-fbtn f-sys"          onclick="filterCon('system',this)">⚙ SYS</button>
+        </div>
+
+        <div class="con-panel" id="consolePanel">
+          <div class="con-empty">Console ready — awaiting events…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+/* ═══ LOGIN ════════════════════════════════════════════════ */
+const CREDS={
+  doctor: {id:'DR001',pass:'doctor123',name:'Dr. Arjun Sharma',sub:'Doctor · ICU-3 · Full access',mfa:true},
+  nurse:  {id:'NR101',pass:'nurse123', name:'Nurse Priya',     sub:'Nurse · Cardiac-1 · Monitor',  mfa:false},
+  admin:  {id:'AD001',pass:'admin123', name:'Administrator',   sub:'Admin · System config',         mfa:true},
+  patient:{id:'P001', pass:'patient123',name:'Arjun Sharma',  sub:'Patient · Gen-4 · Own data',    mfa:false},
+};
+let role='doctor', eyeOpen=false, sessUser=null;
+
+function ini(n){return n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}
+
+function selRole(el,r){
+  role=r;
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');clearMsgs();
+}
+function toggleEye(){
+  eyeOpen=!eyeOpen;
+  document.getElementById('pInp').type=eyeOpen?'text':'password';
+  document.getElementById('eyO').style.display=eyeOpen?'none':'block';
+  document.getElementById('eyC').style.display=eyeOpen?'block':'none';
+}
+function showErr(m){const e=document.getElementById('mErr');e.textContent=m;e.style.display='block';document.getElementById('mOk').style.display='none'}
+function showOk(m) {const e=document.getElementById('mOk');e.style.display='flex';e.textContent=m;document.getElementById('mErr').style.display='none'}
+function clearMsgs(){document.getElementById('mErr').style.display='none';document.getElementById('mOk').style.display='none'}
+function forgotPwd(e){e.preventDefault();const el=document.getElementById('mErr');el.style.cssText='display:block;background:rgba(59,139,212,.07);border-color:rgba(59,139,212,.22);color:#85B7EB;border-radius:8px;padding:9px 13px;font-size:12px;font-family:var(--mono);margin-bottom:13px';el.textContent='Contact IT: it-support@hospital.org · ext. 4400'}
+function doSSO(){clearMsgs();showOk('Redirecting to hospital SSO provider…')}
+
+function doLogin(){
+  clearMsgs();
+  const email=document.getElementById('eInp').value.trim();
+  const pass=document.getElementById('pInp').value;
+  if(!email){showErr('Please enter your Employee ID or email.');return}
+  if(!pass||pass.length<6){showErr('Password must be at least 6 characters.');return}
+  setBtnLoad(true);
+  setTimeout(()=>{
+    setBtnLoad(false);
+    const c=CREDS[role];
+    const ok=(email===c.id||email.toLowerCase()===c.id.toLowerCase()||email.includes('@'))&&pass.length>=6;
+    if(ok){sessUser=c;c.mfa?showMFA():loginSuccess()}
+    else showErr('Invalid credentials. Hint: '+c.id+' / '+c.pass);
+  },1400);
+}
+function setBtnLoad(on){
+  document.getElementById('loginBtn').disabled=on;
+  document.getElementById('bSpin').style.display=on?'block':'none';
+  document.getElementById('bTxt').textContent=on?'Authenticating…':'Sign in to dashboard';
+}
+function showMFA(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('demoH').style.display='none';
+  document.getElementById('mfaW').style.display='block';
+  showOk('Password verified. Enter your MFA code to continue.');
+  setupOTP();
+  setTimeout(()=>document.getElementById('o0').focus(),150);
+}
+function setupOTP(){
+  const boxes=[0,1,2,3,4,5].map(i=>document.getElementById('o'+i));
+  boxes.forEach((box,i)=>{
+    box.value='';
+    box.oninput=()=>{if(box.value&&i<5)boxes[i+1].focus();if(i===5&&box.value)setTimeout(verifyOTP,300)};
+    box.onkeydown=e=>{if(e.key==='Backspace'&&!box.value&&i>0)boxes[i-1].focus()};
+    box.onpaste=e=>{e.preventDefault();const d=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');d.split('').slice(0,6).forEach((ch,j)=>{if(boxes[j])boxes[j].value=ch});const fi=Math.min(d.length,5);if(boxes[fi])boxes[fi].focus()};
+  });
+}
+function verifyOTP(){
+  const code=[0,1,2,3,4,5].map(i=>document.getElementById('o'+i).value).join('');
+  if(code.length<6){showErr('Please enter all 6 digits.');return}
+  const sp=document.getElementById('oSpin'),tx=document.getElementById('oTxt');
+  sp.style.display='block';tx.textContent='Verifying…';
+  setTimeout(()=>{sp.style.display='none';tx.textContent='Verify & open dashboard';loginSuccess()},900);
+}
+function backToLogin(){
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('demoH').style.display='block';
+  document.getElementById('mfaW').style.display='none';
+  clearMsgs();
+}
+function loginSuccess(){
+  const c=sessUser;
+  ['loginForm','mfaW','demoH','roleGrid'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+  clearMsgs();
+  document.getElementById('succScr').style.display='block';
+  document.getElementById('succNm').textContent='Welcome, '+c.name;
+  document.getElementById('succSb').textContent=c.sub+' · Session active';
+  setTimeout(()=>document.getElementById('redirB').style.width='100%',80);
+  setTimeout(()=>launchDashboard(c),2600);
+}
+function launchDashboard(c){
+  document.getElementById('dAv').textContent=ini(c.name);
+  document.getElementById('dNm').textContent=c.name;
+  document.getElementById('dRl').textContent=c.sub.split(' · ').slice(0,2).join(' · ');
+  document.getElementById('wLbl').textContent=c.sub.split(' · ')[0]+' Dashboard · ICU-3';
+  document.getElementById('sessId').textContent=c.id;
+  document.getElementById('LS').classList.remove('active');
+  document.getElementById('DS').classList.add('active');
+  initDashboard(c);
+}
+function doLogout(){
+  if(dashInt){clearInterval(dashInt);dashInt=null}
+  ['loginForm','demoH','roleGrid'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block'});
+  ['mfaW','succScr'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+  document.getElementById('eInp').value='';
+  document.getElementById('pInp').value='';
+  document.getElementById('toastW').innerHTML='';
+  clearMsgs();
+  document.getElementById('DS').classList.remove('active');
+  document.getElementById('LS').classList.add('active');
+}
+
+/* ═══ DASHBOARD DATA ════════════════════════════════════════ */
+const PTS=[
+  {id:'P001',name:'Arjun Sharma', age:54,ward:'ICU-3',    c:'#3B8BD4',bg:'rgba(59,139,212,.15)',bhr:88,bt:37.1,bs:97,bbps:128,bbpd:82},
+  {id:'P002',name:'Priya Nair',   age:42,ward:'Cardiac-1',c:'#1D9E75',bg:'rgba(29,158,117,.15)',bhr:72,bt:36.8,bs:98,bbps:115,bbpd:74},
+  {id:'P003',name:'Vikram Das',   age:67,ward:'ICU-1',    c:'#EF9F27',bg:'rgba(239,159,39,.15)',bhr:95,bt:38.1,bs:93,bbps:158,bbpd:96},
+  {id:'P004',name:'Meena Rao',    age:38,ward:'Gen-4',    c:'#7F77DD',bg:'rgba(127,119,221,.15)',bhr:65,bt:36.6,bs:99,bbps:108,bbpd:68},
+];
+let ap=0;
+let thr={hmax:100,hmin:50,tmax:38.0,smin:94,bpsmax:140,bpsmin:90};
+let vitals=[];
+let ecgD=new Array(120).fill(0),spo2D=new Array(60).fill(97),bpD=new Array(60).fill(120),ecgT=0;
+let flP=74,flR=12,dtick=0,cool={},sessStart=0,dashInt=null;
+
+/* ═══ SMS CONFIG — DUAL RECIPIENTS ═════════════════════════ */
+const SMS_CFG={
+  recipients:[
+    {num:'9361044807', disp:'+91 93610 44807', label:'Dr. Arjun Sharma', color:'#85B7EB', role:'Doctor'},
+    {num:'6374415182', disp:'+91 63744 15182', label:'Alert Contact',    color:'#5DCAA5', role:'Nurse'},
+  ],
+  on:true,
+  apiKey:'',
+};
+let smsLog=[];
+
+/* ═══ COLORFUL CONSOLE SYSTEM ══════════════════════════════ */
+const CONSOLE_THEMES={
+  critical:{ bg:'rgba(226,75,74,.13)', border:'rgba(226,75,74,.4)',  badge:'#E24B4A', badgeTx:'#fff',   icon:'🚨', glow:'rgba(226,75,74,.3)'  },
+  warning: { bg:'rgba(239,159,39,.12)', border:'rgba(239,159,39,.38)',badge:'#EF9F27', badgeTx:'#fff',   icon:'⚡', glow:'rgba(239,159,39,.25)' },
+  info:    { bg:'rgba(59,139,212,.09)', border:'rgba(59,139,212,.3)', badge:'#3B8BD4', badgeTx:'#fff',   icon:'ℹ', glow:'rgba(59,139,212,.2)'  },
+  sms:     { bg:'rgba(29,158,117,.1)',  border:'rgba(29,158,117,.35)',badge:'#1D9E75', badgeTx:'#fff',   icon:'📱', glow:'rgba(29,158,117,.25)' },
+  sent:    { bg:'rgba(127,119,221,.1)', border:'rgba(127,119,221,.3)',badge:'#7F77DD', badgeTx:'#fff',   icon:'✓',  glow:'rgba(127,119,221,.2)' },
+  system:  { bg:'rgba(99,178,255,.07)', border:'rgba(99,178,255,.2)', badge:'#85B7EB', badgeTx:'#0b0f1a',icon:'⚙', glow:'rgba(99,178,255,.15)' },
+};
+let consoleLog=[];
+let consoleAutoScroll=true;
+
+function cLog(type,title,detail,extra){
+  const entry={
+    id:Date.now()+Math.random(),
+    type, title, detail:detail||'', extra:extra||'',
+    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    ms: new Date().toLocaleString('en-IN',{dateStyle:'short',timeStyle:'medium'}),
+  };
+  consoleLog.unshift(entry);
+  if(consoleLog.length>100)consoleLog.length=100;
+  renderConsole();
+}
+
+function renderConsole(){
+  const el=document.getElementById('consolePanel');if(!el)return;
+  if(consoleLog.length===0){
+    el.innerHTML='<div style="font-size:10px;color:var(--tx3);font-family:var(--mono);padding:12px;text-align:center;opacity:.6">Console ready — awaiting events…</div>';
+    return;
+  }
+  el.innerHTML=consoleLog.slice(0,50).map(e=>{
+    const th=CONSOLE_THEMES[e.type]||CONSOLE_THEMES.info;
+    return`<div class="con-row" style="background:${th.bg};border-left:3px solid ${th.badge};box-shadow:0 0 8px ${th.glow}">
+      <div class="con-top">
+        <span class="con-badge" style="background:${th.badge};color:${th.badgeTx}">${th.icon} ${e.type.toUpperCase()}</span>
+        <span class="con-title">${e.title}</span>
+        <span class="con-time">${e.time}</span>
+      </div>
+      ${e.detail?`<div class="con-detail">${e.detail}</div>`:''}
+      ${e.extra?`<div class="con-extra">${e.extra}</div>`:''}
+    </div>`;
+  }).join('');
+  if(consoleAutoScroll)el.scrollTop=0;
+}
+
+function buildMsg(type,title,desc,pt){
+  const now=new Date().toLocaleString('en-IN',{dateStyle:'short',timeStyle:'medium'});
+  return`MedEdge [${type.toUpperCase()}] Pt: ${pt} | ${title} | ${desc} | ${now} | MedEdge Clinical System`;
+}
+
+async function sendToRecipient(rec,text,entry){
+  const proxy='https://corsproxy.io/?'+encodeURIComponent('https://www.fast2sms.com/dev/bulkV2');
+  if(SMS_CFG.apiKey){
+    try{
+      const res=await fetch(proxy,{method:'POST',
+        headers:{'authorization':SMS_CFG.apiKey,'Content-Type':'application/json'},
+        body:JSON.stringify({route:'q',message:text,language:'english',flash:0,numbers:rec.num})});
+      const d=await res.json();
+      return d.return===true?'sent':'failed';
+    }catch(e){ return'open-sms'; }
+  }
+  await new Promise(r=>setTimeout(r,600));
+  return'open-sms';
+}
+
+async function dispatchSMS(type,title,desc,ptName){
+  if(!SMS_CFG.on)return;
+  const text=buildMsg(type,title,desc,ptName);
+  cLog('sms',`SMS Dispatch → ${SMS_CFG.recipients.length} recipients`,`${title}`,`Patient: ${ptName} | ${desc}`);
+
+  for(const rec of SMS_CFG.recipients){
+    const smsURI=`sms:+91${rec.num}?body=${encodeURIComponent(text)}`;
+    const entry={
+      id:Date.now()+Math.random(), type, title, desc, text, smsURI,
+      to:rec.disp, label:rec.label, color:rec.color,
+      time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+      status:'sending', num:rec.num,
+    };
+    smsLog.unshift(entry);renderSMSLog();
+
+    const status=await sendToRecipient(rec,text,entry);
+    entry.status=status;
+    renderSMSLog();
+
+    const statusTx=status==='sent'?`✓ Delivered to ${rec.disp}`:status==='open-sms'?`↗ Tap to send → ${rec.disp}`:`✗ Failed → ${rec.disp}`;
+    cLog(status==='sent'?'sent':'sms',
+      `SMS → ${rec.label} (${rec.disp})`,
+      statusTx,
+      status!=='sent'?`<a href="${smsURI}" style="color:#85B7EB;font-family:var(--mono);font-size:9px">Open SMS App ↗</a>`:''
+    );
+    showSMSToast(entry,rec);
+  }
+}
+
+function renderSMSLog(){
+  const el=document.getElementById('smsLog');if(!el)return;
+  if(smsLog.length===0){el.innerHTML='<div style="font-size:10px;color:var(--tx3);font-family:var(--mono);padding:8px 0;text-align:center">No SMS dispatched yet</div>';return}
+  const icon={sending:'⟳',sent:'✓','open-sms':'↗',failed:'✗'};
+  const col ={sending:'var(--alt)',sent:'var(--tlt)','open-sms':'var(--blt)',failed:'var(--rlt)'};
+  const lbl ={sending:'Sending…',sent:'Delivered','open-sms':'Tap to send',failed:'Failed'};
+  el.innerHTML=smsLog.slice(0,12).map(s=>`
+    <div class="smsit ${s.status}" style="border-left:3px solid ${s.color||'#85B7EB'}">
+      <div class="smsr1">
+        <span class="smsbdg ${s.type}">${s.type.toUpperCase()}</span>
+        <span class="smst">${s.label||s.to}</span>
+        <span class="smstm">${s.time}</span>
+      </div>
+      <div class="smsr2">
+        <span class="smsto" style="color:${s.color||'var(--tx2)'}">${s.to}</span>
+        <span class="smsst" style="color:${col[s.status]}">${icon[s.status]} ${lbl[s.status]}</span>
+        <a class="smsopen" href="${s.smsURI}">SMS ↗</a>
+      </div>
+      <div style="font-size:9px;color:var(--tx3);font-family:var(--mono);margin-top:2px;padding-top:2px;border-top:.5px solid rgba(255,255,255,.04)">${s.title}</div>
+    </div>`).join('');
+}
+
+function showSMSToast(entry,rec){
+  const wrap=document.getElementById('toastW');
+  const t=document.createElement('div');t.className='toast';
+  t.style.borderColor=rec.color+'88';
+  const stLine=entry.status==='sent'
+    ?`<span style="font-size:9px;color:var(--tlt);font-family:var(--mono)">✓ Delivered → ${rec.disp}</span>`
+    :`<a href="${entry.smsURI}" style="font-size:9px;color:var(--blt);font-family:var(--mono);text-decoration:none">Tap to send → ${rec.disp} ↗</a>`;
+  t.innerHTML=`
+    <div style="flex:1">
+      <div class="toast-ti" style="color:${rec.color}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        ${rec.label}
+      </div>
+      <div class="toast-msg">${entry.title} — ${entry.desc}</div>
+      <div class="toast-sms-line">${stLine}</div>
+    </div>
+    <span class="tx" onclick="this.parentElement.remove()">✕</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>{if(t.parentElement)t.remove()},8000);
+}
+
+async function testSMS(){
+  if(!SMS_CFG.apiKey){
+    showTestResult('No API key entered. Get one free at fast2sms.com → Dev → API','warn');
+    cLog('system','Test SMS skipped','No API key configured','<a href="https://fast2sms.com" target="_blank" style="color:#85B7EB;font-family:var(--mono);font-size:9px">Get free key at fast2sms.com ↗</a>');
+    return;
+  }
+  showTestResult('Sending test SMS to all recipients…','info');
+  cLog('system','Test SMS initiated',`Dispatching to ${SMS_CFG.recipients.length} recipients`,'');
+  for(const rec of SMS_CFG.recipients){
+    const text=`MedEdge TEST: Alert system active. This is a test message. Recipient: ${rec.disp} (${rec.role}). — MedEdge`;
+    const smsURI=`sms:+91${rec.num}?body=${encodeURIComponent(text)}`;
+    const entry={id:Date.now()+Math.random(),type:'warning',title:'Test SMS',desc:'System test',text,smsURI,
+      to:rec.disp,label:rec.label,color:rec.color,
+      time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),status:'sending',num:rec.num};
+    smsLog.unshift(entry);renderSMSLog();
+    try{
+      const proxy='https://corsproxy.io/?'+encodeURIComponent('https://www.fast2sms.com/dev/bulkV2');
+      const res=await fetch(proxy,{method:'POST',
+        headers:{'authorization':SMS_CFG.apiKey,'Content-Type':'application/json'},
+        body:JSON.stringify({route:'q',message:text,language:'english',flash:0,numbers:rec.num})});
+      const d=await res.json();
+      if(d.return===true){
+        entry.status='sent';
+        showTestResult(`✓ Test SMS sent to ${rec.disp}`,'ok');
+        cLog('sent',`Test SMS delivered → ${rec.label}`,rec.disp,'');
+      }else{
+        entry.status='failed';
+        cLog('critical',`Test SMS failed → ${rec.label}`,d.message?.[0]||'API error','');
+        showTestResult('API error: '+(d.message?.[0]||JSON.stringify(d)),'err');
+      }
+    }catch(e){
+      entry.status='open-sms';
+      cLog('sms',`Open SMS app → ${rec.label}`,rec.disp,`<a href="${smsURI}" style="color:#85B7EB;font-family:var(--mono);font-size:9px">Tap to open SMS ↗</a>`);
+      showTestResult('Auto-send not available. Tap SMS ↗ to send manually.','warn');
+    }
+    renderSMSLog();
+  }
+}
+
+function showTestResult(msg,type){
+  const colors={ok:'#5DCAA5',warn:'#FAC775',err:'#F09595',info:'#85B7EB'};
+  const wrap=document.getElementById('toastW');
+  const t=document.createElement('div');t.className='toast';
+  t.style.cssText='border-color:rgba(255,255,255,.15);background:#151c28';
+  t.innerHTML=`<div style="flex:1;font-size:11px;color:${colors[type]||'#e8ecf4'};font-family:var(--mono)">${msg}</div><span class="tx" onclick="this.parentElement.remove()">✕</span>`;
+  wrap.appendChild(t);setTimeout(()=>{if(t.parentElement)t.remove()},5000);
+}
+
+/* ═══ DASHBOARD LOGIC ═══════════════════════════════════════ */
+function status(v){
+  if(v.hr>thr.hmax+15||v.hr<thr.hmin-10||v.s<thr.smin-3||v.t>thr.tmax+0.8||v.bps>thr.bpsmax+20||v.bps<thr.bpsmin-20)
+    return{l:'CRITICAL',dc:'sc',tb:'rgba(226,75,74,.12)',tc:'#F09595'};
+  if(v.hr>thr.hmax||v.hr<thr.hmin||v.s<thr.smin||v.t>thr.tmax||v.bps>thr.bpsmax||v.bps<thr.bpsmin)
+    return{l:'WARNING',dc:'sw',tb:'rgba(239,159,39,.12)',tc:'#FAC775'};
+  return{l:'NORMAL',dc:'sn',tb:'rgba(29,158,117,.1)',tc:'#5DCAA5'};
+}
+
+function renderList(){
+  const el=document.getElementById('ptList');el.innerHTML='';
+  PTS.forEach((p,i)=>{
+    const st=status(vitals[i]);
+    const d=document.createElement('div');
+    d.className='pti'+(i===ap?' active':'');
+    d.onclick=()=>{ap=i;renderList();renderHeader()};
+    d.innerHTML=`<div class="ptav" style="background:${p.bg};color:${p.c}">${ini(p.name)}</div>
+      <div style="flex:1;min-width:0"><div class="ptnm">${p.name.split(' ')[0]}</div><div class="ptmt">${p.id}·${p.ward}</div></div>
+      <div class="sd ${st.dc}"></div>`;
+    el.appendChild(d);
+  });
+}
+
+function renderHeader(){
+  const p=PTS[ap],v=vitals[ap],st=status(v);
+  const av=document.getElementById('phAv');
+  av.style.background=p.bg;av.style.color=p.c;av.textContent=ini(p.name);
+  document.getElementById('phNm').textContent=p.name;
+  document.getElementById('phMt').textContent=`${p.id} · Age ${p.age} · ${p.ward}`;
+  const t=document.getElementById('phTag');
+  t.textContent=st.l;t.style.background=st.tb;t.style.color=st.tc;
+}
+
+function renderVitals(){
+  const v=vitals[ap];
+  document.getElementById('vHR').textContent=Math.round(v.hr);
+  document.getElementById('vTMP').textContent=v.t.toFixed(1);
+  document.getElementById('vSPO').textContent=Math.round(v.s);
+  document.getElementById('vBPs').textContent=Math.round(v.bps);
+  document.getElementById('vBPd').textContent=Math.round(v.bpd);
+  function tag(id,ok){const e=document.getElementById(id);e.textContent=ok?'Normal':'Abnormal';e.style.background=ok?'rgba(29,158,117,.1)':'rgba(226,75,74,.1)';e.style.color=ok?'#5DCAA5':'#F09595'}
+  tag('tHR',v.hr<=thr.hmax&&v.hr>=thr.hmin);
+  tag('tTMP',v.t<=thr.tmax);
+  tag('tSPO',v.s>=thr.smin);
+  tag('tBP',v.bps<=thr.bpsmax&&v.bps>=thr.bpsmin);
+}
+
+function addAlert(type,title,desc){
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const list=document.getElementById('alertList');
+  const d=document.createElement('div');
+  d.className='ai a'+type[0];
+  d.innerHTML=`<div class="aib"><div class="ait">${title}</div><div class="aid">${desc}</div></div><span class="aitm">${now}</span>`;
+  list.prepend(d);
+  while(list.children.length>14)list.removeChild(list.lastChild);
+  // Mirror to colorful console
+  cLog(type,title,desc,'');
+}
+
+function showToast(title,msg){
+  const wrap=document.getElementById('toastW');
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`<div style="flex:1"><div class="toast-ti">${title}</div><div class="toast-msg">${msg}</div></div><span class="tx" onclick="this.parentElement.remove()">✕</span>`;
+  wrap.appendChild(t);setTimeout(()=>{if(t.parentElement)t.remove()},5000);
+}
+
+let conFilter='all';
+function filterCon(f,el){
+  conFilter=f;
+  document.querySelectorAll('.con-fbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderConsole();
+}
+function toggleConScroll(){
+  consoleAutoScroll=!consoleAutoScroll;
+  document.getElementById('scrollBtn').textContent=consoleAutoScroll?'↑ Auto':'⏸ Paused';
+}
+function clearConsole(){consoleLog=[];renderConsole()}
+
+function renderConsole(){
+  const el=document.getElementById('consolePanel');if(!el)return;
+  const filtered=conFilter==='all'?consoleLog:consoleLog.filter(e=>{
+    if(conFilter==='critical')return e.type==='critical';
+    if(conFilter==='warning')return e.type==='warning';
+    if(conFilter==='sms')return e.type==='sms'||e.type==='sent';
+    if(conFilter==='system')return e.type==='info'||e.type==='system';
+    return true;
+  });
+  if(filtered.length===0){
+    el.innerHTML='<div class="con-empty">No events match this filter</div>';return;
+  }
+  el.innerHTML=filtered.slice(0,50).map(e=>{
+    const th=CONSOLE_THEMES[e.type]||CONSOLE_THEMES.info;
+    return`<div class="con-row" style="background:${th.bg};border-left:3px solid ${th.badge};box-shadow:0 1px 6px ${th.glow}">
+      <div class="con-top">
+        <span class="con-badge" style="background:${th.badge};color:${th.badgeTx}">${th.icon} ${e.type.toUpperCase()}</span>
+        <span class="con-title">${e.title}</span>
+        <span class="con-time">${e.time}</span>
+      </div>
+      ${e.detail?`<div class="con-detail">${e.detail}</div>`:''}
+      ${e.extra?`<div class="con-extra">${e.extra}</div>`:''}
+    </div>`;
+  }).join('');
+  if(consoleAutoScroll)el.scrollTop=0;
+}
+
+function renderRecipients(){
+  const el=document.getElementById('recList');if(!el)return;
+  el.innerHTML=SMS_CFG.recipients.map(r=>`
+    <div class="rec-row">
+      <div class="rec-dot" style="background:${r.color};box-shadow:0 0 6px ${r.color}88"></div>
+      <div style="flex:1">
+        <div class="rec-name">${r.label}</div>
+        <div class="rec-num">${r.disp}</div>
+      </div>
+      <span class="rec-role" style="background:${r.color}22;color:${r.color};border:.5px solid ${r.color}44">${r.role}</span>
+    </div>`).join('');
+}
+
+function clearAlerts(){document.getElementById('alertList').innerHTML='';cLog('system','Alert log cleared','Manual clear by operator','')}
+function clearSMSLog(){smsLog=[];renderSMSLog();cLog('system','SMS log cleared','','')} 
+
+function checkAlerts(){
+  const v=vitals[ap],p=PTS[ap];
+  const checks=[
+    {k:'hh',c:v.hr>thr.hmax,  tp:'critical',t:`Tachycardia — ${p.name.split(' ')[0]}`,  d:`HR ${Math.round(v.hr)} bpm exceeds ${thr.hmax} bpm threshold`},
+    {k:'hl',c:v.hr<thr.hmin,  tp:'critical',t:`Bradycardia — ${p.name.split(' ')[0]}`,  d:`HR ${Math.round(v.hr)} bpm below ${thr.hmin} bpm threshold`},
+    {k:'tm',c:v.t>thr.tmax,   tp:'warning', t:`Hyperthermia — ${p.name.split(' ')[0]}`, d:`Temp ${v.t.toFixed(1)} °C exceeds ${thr.tmax} °C`},
+    {k:'so',c:v.s<thr.smin,   tp:'critical',t:`Hypoxia — ${p.name.split(' ')[0]}`,      d:`SpO2 ${Math.round(v.s)}% below ${thr.smin}%`},
+    {k:'bph',c:v.bps>thr.bpsmax,tp:'critical',t:`Hypertension — ${p.name.split(' ')[0]}`,d:`BP ${Math.round(v.bps)}/${Math.round(v.bpd)} mmHg — systolic exceeds ${thr.bpsmax}`},
+    {k:'bpl',c:v.bps<thr.bpsmin,tp:'critical',t:`Hypotension — ${p.name.split(' ')[0]}`,d:`BP ${Math.round(v.bps)}/${Math.round(v.bpd)} mmHg — systolic below ${thr.bpsmin}`},
+  ];
+  checks.forEach(c=>{
+    if(c.c&&(Date.now()-(cool[c.k]||0))>9000){
+      addAlert(c.tp,c.t,c.d);
+      showToast(c.t,c.d);
+      dispatchSMS(c.tp,c.t,c.d,p.name);
+      cool[c.k]=Date.now();
+    }
+    if(!c.c)cool[c.k]=0;
+  });
+}
+
+function simAlert(){
+  vitals[ap].hr=thr.hmax+20+Math.random()*10;
+  vitals[ap].s=Math.min(vitals[ap].s,thr.smin-5);
+  vitals[ap].bps=thr.bpsmax+22+Math.random()*12;
+  vitals[ap].bpd=Math.round(vitals[ap].bps*.64);
+  const p=PTS[ap];
+  const hr=Math.round(vitals[ap].hr),bps=Math.round(vitals[ap].bps),bpd=Math.round(vitals[ap].bpd),spo=Math.round(vitals[ap].s);
+  addAlert('critical',`Tachycardia — ${p.name.split(' ')[0]}`,`HR ${hr} bpm (simulated alert)`);
+  addAlert('critical',`Hypertension — ${p.name.split(' ')[0]}`,`BP ${bps}/${bpd} mmHg (simulated alert)`);
+  addAlert('critical',`Hypoxia — ${p.name.split(' ')[0]}`,`SpO₂ ${spo}% (simulated alert)`);
+  showToast(`⚠ SIMULATED CRITICAL — ${p.name.split(' ')[0]}`,`HR ${hr} bpm · BP ${bps}/${bpd} · SpO₂ ${spo}%`);
+  cLog('system','Simulated alert triggered',`Patient: ${p.name} · ${p.ward}`,`Dispatching SMS → ${SMS_CFG.recipients.map(r=>r.disp).join(' + ')}`);
+  dispatchSMS('critical',`CRITICAL: ${p.name.split(' ')[0]}`,`HR ${hr} bpm · BP ${bps}/${bpd} mmHg · SpO₂ ${spo}%`,p.name);
+  renderVitals();renderList();renderHeader();
+}
+
+function updateThr(){
+  thr.hmax=+document.getElementById('tHmax').value;
+  thr.hmin=+document.getElementById('tHmin').value;
+  thr.tmax=+document.getElementById('tTmax').value;
+  thr.smin=+document.getElementById('tSmin').value;
+  thr.bpsmax=+document.getElementById('tBPsmax').value;
+  thr.bpsmin=+document.getElementById('tBPsmin').value;
+}
+
+function updateStore(){
+  const v=vitals[ap],p=PTS[ap];
+  const now=new Date().toISOString().replace('T',' ').substring(0,19);
+  const entries=[
+    {k:'patient_id',v:p.id,s:'edge'},
+    {k:'hr_bpm',v:Math.round(v.hr).toString(),s:'sensor'},
+    {k:'temp_c',v:v.t.toFixed(2),s:'sensor'},
+    {k:'spo2_%',v:Math.round(v.s).toString(),s:'sensor'},
+    {k:'bp_mmhg',v:`${Math.round(v.bps)}/${Math.round(v.bpd)}`,s:'sensor'},
+    {k:'fl_model',v:'v2.4-r'+flR,s:'cloud_fl'},
+    {k:'alert_ph',v:SMS_CFG.recipient,s:'config'},
+    {k:'timestamp',v:now,s:'edge_clk'},
+  ];
+  document.getElementById('storeGrid').innerHTML=entries.map(e=>`<div class="stc"><div class="stcl">${e.k}</div><div class="stcv">${e.v}</div><div class="stcs">${e.s}</div></div>`).join('');
+}
+
+function updateFL(){
+  flP+=(Math.random()*2.5-.3);if(flP>=100){flP=0;flR++}flP=Math.max(0,Math.min(99,flP));
+  document.getElementById('flBar').style.width=Math.round(flP)+'%';
+  document.getElementById('flP').textContent=Math.round(flP)+'%';
+  document.getElementById('flR').textContent=flR;
+}
+
+function ecgWave(t){
+  const p=60,pos=((t%p)+p)%p;
+  if(pos<2)return pos*.3;if(pos<3)return .6-(pos-2)*.4;if(pos<4)return .2+(pos-3)*.1;
+  if(pos<4.5)return .3+(pos-4)*1.0;if(pos<5)return .8-(pos-4.5)*3.0;
+  if(pos<5.5)return-.7+(pos-5)*3.2;if(pos<6)return .9-(pos-5.5)*2.2;
+  if(pos<8)return .4-(pos-6)*.15;if(pos<9)return(pos-8)*.3;
+  if(pos<11)return .3-(pos-9)*.15;return 0;
+}
+
+function drawECG(){
+  const c=document.getElementById('ecgC');if(!c)return;
+  const ctx=c.getContext('2d'),W=c.offsetWidth||400,H=64;
+  c.width=W;c.height=H;ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=13){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  const spd=vitals[ap].hr/60;
+  ecgD.shift();ecgT+=spd*.8;ecgD.push(ecgWave(ecgT));
+  ctx.beginPath();ctx.strokeStyle='#E24B4A';ctx.lineWidth=1.4;
+  for(let i=0;i<ecgD.length;i++){const x=(i/ecgD.length)*W,y=H/2-ecgD[i]*(H*.37);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.stroke();
+}
+
+function drawSpo2(){
+  const c=document.getElementById('spo2C');if(!c)return;
+  const ctx=c.getContext('2d'),W=c.offsetWidth||400,H=48;
+  c.width=W;c.height=H;ctx.clearRect(0,0,W,H);
+  spo2D.shift();spo2D.push(vitals[ap].s);
+  const mn=85,mx=100;
+  ctx.beginPath();ctx.fillStyle='rgba(59,139,212,.08)';
+  for(let i=0;i<spo2D.length;i++){const x=(i/spo2D.length)*W,y=H-((spo2D[i]-mn)/(mx-mn))*(H-8);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#3B8BD4';ctx.lineWidth=1.3;
+  for(let i=0;i<spo2D.length;i++){const x=(i/spo2D.length)*W,y=H-((spo2D[i]-mn)/(mx-mn))*(H-8);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.stroke();
+}
+
+function drawBP(){
+  const c=document.getElementById('bpC');if(!c)return;
+  const ctx=c.getContext('2d'),W=c.offsetWidth||400,H=48;
+  c.width=W;c.height=H;ctx.clearRect(0,0,W,H);
+  bpD.shift();bpD.push(vitals[ap].bps);
+  const mn=60,mx=200;
+  // fill area
+  ctx.beginPath();ctx.fillStyle='rgba(127,119,221,.1)';
+  for(let i=0;i<bpD.length;i++){const x=(i/bpD.length)*W,y=H-((bpD[i]-mn)/(mx-mn))*(H-8);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  // normal range band
+  const yH=H-((thr.bpsmax-mn)/(mx-mn))*(H-8);
+  const yL=H-((thr.bpsmin-mn)/(mx-mn))*(H-8);
+  ctx.fillStyle='rgba(29,158,117,.07)';ctx.fillRect(0,yH,W,yL-yH);
+  // line
+  ctx.beginPath();ctx.strokeStyle='#7F77DD';ctx.lineWidth=1.4;
+  for(let i=0;i<bpD.length;i++){const x=(i/bpD.length)*W,y=H-((bpD[i]-mn)/(mx-mn))*(H-8);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+  ctx.stroke();
+  // threshold lines
+  ctx.setLineDash([3,3]);ctx.lineWidth=.7;
+  ctx.strokeStyle='rgba(226,75,74,.55)';ctx.beginPath();ctx.moveTo(0,yH);ctx.lineTo(W,yH);ctx.stroke();
+  ctx.strokeStyle='rgba(59,139,212,.45)';ctx.beginPath();ctx.moveTo(0,yL);ctx.lineTo(W,yL);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function updateClock(){
+  document.getElementById('dbClock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const dur=Math.floor((Date.now()-sessStart)/1000);
+  document.getElementById('sessDur').textContent=String(Math.floor(dur/60)).padStart(2,'0')+':'+String(dur%60).padStart(2,'0');
+}
+
+function updateVitals(){
+  PTS.forEach((p,i)=>{
+    const n=()=>(Math.random()-.5)*2;
+    vitals[i].hr =Math.max(30,Math.min(180,vitals[i].hr+n()));
+    vitals[i].t  =Math.max(35,Math.min(40, vitals[i].t+(Math.random()-.5)*.07));
+    vitals[i].s  =Math.max(85,Math.min(100,vitals[i].s+(Math.random()-.5)*.4));
+    vitals[i].bps=Math.max(70,Math.min(200,vitals[i].bps+(Math.random()-.5)*1.5));
+    vitals[i].bpd=Math.max(40,Math.min(130,vitals[i].bpd+(Math.random()-.5)*.9));
+    vitals[i].hr +=(p.bhr -vitals[i].hr) *.05;
+    vitals[i].t  +=(p.bt  -vitals[i].t)  *.03;
+    vitals[i].s  +=(p.bs  -vitals[i].s)  *.04;
+    vitals[i].bps+=(p.bbps-vitals[i].bps)*.04;
+    vitals[i].bpd+=(p.bbpd-vitals[i].bpd)*.04;
+  });
+}
+
+function dashLoop(){
+  dtick++;
+  updateClock();updateVitals();renderVitals();renderList();renderHeader();
+  drawECG();
+  if(dtick%3===0){drawSpo2();drawBP()}
+  if(dtick%5===0)updateStore();
+  if(dtick%8===0)updateFL();
+  if(dtick%6===0)checkAlerts();
+  // Log vitals snapshot to console every ~20s
+  if(dtick%50===0){
+    const v=vitals[ap],p=PTS[ap];
+    cLog('info',`Vitals snapshot — ${p.name.split(' ')[0]}`,
+      `HR ${Math.round(v.hr)} bpm · Temp ${v.t.toFixed(1)}°C · SpO₂ ${Math.round(v.s)}% · BP ${Math.round(v.bps)}/${Math.round(v.bpd)} mmHg`,
+      `Ward: ${p.ward} · FL Round ${flR}`);
+  }
+}
+
+function initDashboard(user){
+  ap=0;dtick=0;sessStart=Date.now();flP=74;flR=12;cool={};
+  vitals=PTS.map(p=>({hr:p.bhr,t:p.bt,s:p.bs,bps:p.bbps,bpd:p.bbpd}));
+  ecgD=new Array(120).fill(0);spo2D=new Array(60).fill(97);bpD=new Array(60).fill(120);ecgT=0;
+  document.getElementById('alertList').innerHTML='';
+  consoleLog=[];smsLog=[];conFilter='all';
+  renderConsole();renderSMSLog();renderRecipients();
+
+  // Boot sequence logs
+  cLog('system','MedEdge Dashboard initialized',`User: ${user.name} · ${user.sub}`,'');
+  cLog('system','FL Model v2.4 loaded','FedAvg · Differential Privacy · Secure Aggregation','');
+  cLog('system','Edge nodes connected','4 patients streaming · ICU-3, Cardiac-1, ICU-1, Gen-4','');
+  cLog('system','SMS Alert configured',
+    `Recipients: ${SMS_CFG.recipients.map(r=>r.disp).join(' · ')}`,
+    SMS_CFG.apiKey?'Auto-send: ENABLED':'Auto-send: OFF — paste API key for automatic SMS');
+  cLog('info','Vitals monitoring active','HR · Temperature · SpO₂ · Blood Pressure','');
+
+  addAlert('info','Session started — '+user.name,user.sub+' · FL v2.4 · BP+HR+SpO₂+Temp active');
+
+  renderList();renderHeader();updateStore();
+  dashLoop();
+  if(dashInt)clearInterval(dashInt);
+  dashInt=setInterval(dashLoop,400);
+}
+</script>
+</body>
+</html>
